@@ -24,6 +24,8 @@ from numpy.linalg import norm
 from tabulate import tabulate
 
 
+
+
 def load_csv_column(csv_file, column_index, first_row_header=False):
     df = pd.read_csv(csv_file, header=None if not first_row_header else 'infer')
     return df.iloc[:, column_index]
@@ -232,6 +234,16 @@ def calculate_mask(negative_freq, positive_freq):
     return weights
 
 
+def calculate_filter(mask, percent_filter):
+    num_elements_to_zero = int(len(mask) * percent_filter)
+    # Sort the array and find the threshold value
+    sorted = np.sort(mask)
+    filter_threshold = sorted[num_elements_to_zero]
+    # Set elements less than the threshold to zero
+    new_zeros = np.where(mask == filter_threshold)[0]
+    mask[mask < filter_threshold] = 0
+    return mask, new_zeros
+
 def calculate_EER(fpr, fnr):
     EER_Matrix = np.empty(len(fpr))
     for i in range(len(fpr)):
@@ -347,8 +359,8 @@ def rotate_2x2(matrix):
 
 
 def load_data():
-    reviews_matrix = pd.read_csv("dictionary_data/review_data.csv").to_numpy().T
-    review_dict = load_csv_row("dictionary_data/review_dict.csv", 0, first_row_header=False)
+    reviews_matrix = pd.read_csv("review_data.csv").to_numpy().T
+    review_dict = load_csv_row("review_dict.csv", 0, first_row_header=False)
     sorted_indices = np.argsort(reviews_matrix[0])
     reviews_matrix = reviews_matrix[:, sorted_indices]
     return reviews_matrix, review_dict
@@ -387,15 +399,24 @@ def main():
     while True:
         if not parameters_set:
             print("Setting hyperparameters...")
-            percentage_testing = float(input("Enter percentage for testing data (e.g., 0.1 for 10%): "))
-            lower_threshold = float(input("Enter lower threshold value (Recommended value=-1): "))
-            upper_threshold = float(input("Enter upper threshold value (Recommended value=1): "))
-            lower_bound = float(input("Enter lower bound value (Recommended value=-0.1, an integer or float that's "
+            default = input("Enter Y for default settings): ")
+            if default == "Y":
+                percentage_testing = 0.1
+                lower_threshold = -1
+                upper_threshold = 1
+                lower_bound = -0.1
+                upper_bound = 0.1
+                step_value = 0.02
+            else:
+                percentage_testing = float(input("Enter percentage for testing data (e.g., 0.1 for 10%): "))
+                lower_threshold = float(input("Enter lower threshold value (Recommended value=-1): "))
+                upper_threshold = float(input("Enter upper threshold value (Recommended value=1): "))
+                lower_bound = float(input("Enter lower bound value (Recommended value=-0.1, an integer or float that's "
                                       "less than zero): "))
-            upper_bound = float(input("Enter upper bound value (Recommended value=0.1, an integer or float that's "
+                upper_bound = float(input("Enter upper bound value (Recommended value=0.1, an integer or float that's "
                                       "greater than zero): "))
-            step_value = float(input("Enter step value (Recommended value=0.02): "))
-            threshold_values = np.arange(lower_bound, upper_bound, step_value)
+                step_value = float(input("Enter step value (Recommended value=0.02): "))
+                threshold_values = np.arange(lower_bound, upper_bound, step_value)
             percentage_training = 1 - percentage_testing
 
             # Store hyperparameters in a list of tuples
@@ -428,41 +449,6 @@ def main():
             if (percentage_testing is not None and lower_threshold is not None and upper_threshold is not None
                     and lower_bound is not None and upper_bound is not None and step_value is not None):
 
-                # Split data into training and testing sets
-                review_training, review_testing = train_test_split(reviews_matrix.T, test_size=percentage_testing,
-                                                                   random_state=42)
-
-                # Generate frequencies
-                pos_frequencies_train = generate_bag_of_words_frequencies(review_dict,
-                                                                          review_training[review_training[:, 0] > 3])
-                neg_frequencies_train = generate_bag_of_words_frequencies(review_dict,
-                                                                          review_training[review_training[:, 0] < 3])
-
-                # Calculate mask
-                mask = np.abs(pos_frequencies_train - neg_frequencies_train) / (
-                        pos_frequencies_train + neg_frequencies_train + 1e-9)
-                masked_neg = mask * neg_frequencies_train
-                masked_pos = mask * pos_frequencies_train
-
-                # Generate frequencies for testing data
-                all_frequencies_test = []
-                for review_text in review_testing[:, 1]:
-                    if review_text:
-                        review_freq = generate_bag_of_words_frequencies(review_dict, [review_text])
-
-                        all_frequencies_test.append(review_freq)
-                all_frequencies_test = np.array(all_frequencies_test).T
-
-                # Combine frequencies for testing
-                combined_matrix = np.concatenate(
-                    (masked_pos.reshape(-1, 1), masked_neg.reshape(-1, 1), all_frequencies_test),
-                    axis=1)
-
-                # Compute cosine similarities
-                pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
-
-                reviews_matrix = pd.read_csv("dictionary_data/review_data.csv").to_numpy().T
-                review_dict = load_csv_row("dictionary_data/review_dict.csv", 0, first_row_header=False)
                 sorted_indices = np.argsort(reviews_matrix[0])
                 reviews_matrix = reviews_matrix[:, sorted_indices]
 
@@ -473,9 +459,6 @@ def main():
 
                 pos_frequencies_test, neg_frequencies_test = generate_freq(review_training, review_dict)
 
-                mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
-                masked_neg = mask * neg_frequencies_test
-                masked_pos = mask * pos_frequencies_test
 
                 combined_testing = np.concatenate((pos_testing, neg_testing), axis=0)
 
@@ -496,6 +479,14 @@ def main():
 
                 all_frequencies_test = np.array(all_frequencies_test).T
 
+                percent_filter = 0.38
+
+                mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
+                filtered_mask, set_to_zero_index = calculate_filter(mask, percent_filter)
+
+
+                masked_neg = filtered_mask * neg_frequencies_test
+                masked_pos = filtered_mask * pos_frequencies_test
                 combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
                 pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
 
@@ -512,6 +503,8 @@ def main():
                 predicted_labels, EER, thresholds, confusion_matrices, uar_matrix, all_fpr, all_fnr = (
                     confusion_matrix_scheduler(actual_labels, pos_cosine, neg_cosine, threshold_matrix))
                 report = statistics(actual_labels, predicted_labels)
+
+
 
             else:
                 print("Hyperparameters are not set. Please set hyperparameters first.")
