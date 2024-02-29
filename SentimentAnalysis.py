@@ -236,12 +236,10 @@ def calculate_mask(negative_freq, positive_freq):
 
 
 def calculate_filter(mask, percent_filter):
-    num_elements_to_zero = int(len(mask) * percent_filter)
-    # Sort the array and find the threshold value
-    sorted = np.sort(mask)
-    filter_threshold = sorted[num_elements_to_zero]
+    # Calculate the percentile value based on percent_filter
+    filter_threshold = np.percentile(mask, percent_filter)
     # Set elements less than the threshold to zero
-    new_zeros = np.where(mask == filter_threshold)[0]
+    new_zeros = np.where(mask < filter_threshold)[0]
     mask[mask < filter_threshold] = 0
     return mask, new_zeros
 
@@ -471,12 +469,12 @@ def main():
 
                 mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
                 filtered_mask, set_to_zero_index = calculate_filter(mask, percent_filter)
+                
 
-
-                #masked_neg = filtered_mask * neg_frequencies_test
-                #masked_pos = filtered_mask * pos_frequencies_test
-                #combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
-                combined_matrix = np.concatenate((pos_frequencies_test, neg_frequencies_test, all_frequencies_test), axis=1)
+                masked_neg = filtered_mask * neg_frequencies_test
+                masked_pos = filtered_mask * pos_frequencies_test
+                combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
+                #combined_matrix = np.concatenate((pos_frequencies_test, neg_frequencies_test, all_frequencies_test), axis=1)
                 pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
 
                 actual_labels = create_actual_labels(combined_testing[:, 0])
