@@ -150,25 +150,30 @@ def count_correct_predictions(actual_labels, predicted_labels):
     return correct_count, wrong_count
 
 
-def percent_filtered_calc(actual_labels, pos_frequencies_test, neg_frequencies_test,percent_filter_array, mask, all_frequencies_test, upper_threshold, lower_threshold):
+def percent_filter_calc(actual_labels, pos_frequencies_test, neg_frequencies_test,percent_filter_array, mask, all_frequencies_test, upper_threshold, lower_threshold):
     confusion_matrices = []
     uar_matrix = []
     all_fpr = []
     all_fnr = []
     all_EER = []
+    all_pos = []
+    all_neg = []
     for i, percent_filtered in enumerate(percent_filter_array):
         filtered_mask = calculate_filter(mask, percent_filtered)
+        #filtered_mask = calculate_filter_ends(mask, percent_filtered)
         masked_neg = filtered_mask * neg_frequencies_test
         masked_pos = filtered_mask * pos_frequencies_test
-                
+        nonzero_neg = non_zero_values(masked_neg)
+        nonzero_pos = non_zero_values(masked_pos)
+
         combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
         pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
 
         z, z, best_threshold = calculate_threshold_bisectional(pos_cosine,
-                                                                                            neg_cosine,
-                                                                                            upper_threshold,
-                                                                                            lower_threshold,
-                                                                                            actual_labels)
+                                                            neg_cosine,
+                                                            upper_threshold,
+                                                            lower_threshold,
+                                                            actual_labels)
         # calculate predicted label and scores
         predicted_labels, calc_scores = label_classifier(pos_cosine, neg_cosine, best_threshold)
         # calculate the Confusion Matrix
@@ -177,15 +182,18 @@ def percent_filtered_calc(actual_labels, pos_frequencies_test, neg_frequencies_t
         Uar = calculate_performance_matrix(cm, 0)
         fpr, fnr = calculate_fpr_fnr(cm)
         EER = (fpr + fnr) / 2
-
+        
         confusion_matrices.append(cm)  # Append the confusion matrix
         uar_matrix.append(Uar)
         all_fpr.append(fpr)  # Accumulate false positive rates
         all_fnr.append(fnr)  # Accumulate false negative rates
         all_EER.append(EER)
+        all_neg.append(nonzero_neg)
+        all_pos.append(nonzero_pos)
         print("End of Iteration: ", i, "The percent tested: " , percent_filtered)
+        print("The EER: ", EER)
 
-    return confusion_matrices, uar_matrix, all_fpr, all_fnr, all_EER
+    return confusion_matrices, uar_matrix, all_fpr, all_fnr, all_EER, all_neg, all_pos
 
 def plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER):
     plt.figure(figsize=(10, 6))
@@ -195,9 +203,31 @@ def plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER):
     
     plt.title('Metrics vs. Percent Filter')
     plt.xlabel('Percent Filter')
-    plt.ylabel('Metrics Value')
+    plt.ylabel('EER Value')
     plt.legend()
     plt.grid(True)
+    plt.show()
+
+def plot_nonzero(percent_filter_array, all_neg, all_pos):
+    fig, axes = plt.subplots(2, 1, figsize=(10, 10))
+
+    # Plot for positive array
+    axes[0].plot(percent_filter_array, all_pos, label='positive', color='blue')
+    axes[0].set_title('Positive Array')
+    axes[0].set_xlabel('Percent Filter')
+    axes[0].set_ylabel('Frequencies in Array Value')
+    axes[0].grid(True)
+    axes[0].legend()
+
+    # Plot for negative array
+    axes[1].plot(percent_filter_array, all_neg, label='negative', color='orange')
+    axes[1].set_title('Negative Array')
+    axes[1].set_xlabel('Percent Filter')
+    axes[1].set_ylabel('Frequencies in Array Value')
+    axes[1].grid(True)
+    axes[1].legend()
+
+    plt.tight_layout()
     plt.show()
 
 def calculate_metrics(actual_labels, positive_scores, negative_scores, threshold):
@@ -262,9 +292,22 @@ def calculate_mask(negative_freq, positive_freq):
 
 
 def calculate_filter(mask, percent_filter):
-    # Calculate the percentile value based on percent_filter
-    #filter_threshold = np.percentile(mask, percent_filter)
+    percent_filter = np.percentile(mask, (percent_filter/2) * 100)
+    inverse_filter = np.percentile(mask, (100 - ((percent_filter / 2)* 100)))
+
     mask[mask < percent_filter] = 0
+    mask[mask > inverse_filter] = 0
+    return mask
+
+def calculate_filter_ends(mask, percent_filter):
+    upper_percent = (percent_filter * 3) / 4
+    lower_percent = percent_filter / 4
+
+    upper_percent = np.percentile(mask, (upper_percent) * 100)
+    lower_percent = np.percentile(mask, (lower_percent) * 100)
+
+    mask[mask < lower_percent] = 0
+    mask[mask > upper_percent] = 0
     return mask
 
 def calculate_EER(fpr, fnr):
@@ -297,7 +340,7 @@ def calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold, low
 
         cm_mid = metrics.confusion_matrix(actual_labels, mid_predicted_label)
         fpr_mid, fnr_mid = calculate_fpr_fnr(cm_mid)
-        print("This current FPR and FNR: ", fpr_mid, fnr_mid)
+        #print("This current FPR and FNR: ", fpr_mid, fnr_mid)
         diff_mid = fpr_mid - fnr_mid
 
 
@@ -305,7 +348,7 @@ def calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold, low
             lower_threshold = mid_threshold
         elif diff_mid < 0:
             upper_threshold = mid_threshold
-        print("The lower and upper thresholds: ",lower_threshold, upper_threshold)
+        #print("The lower and upper thresholds: ",lower_threshold, upper_threshold)
 
         if abs(lower_threshold - upper_threshold) <= 0.0000002:
             break  
@@ -362,9 +405,12 @@ def rotate_2x2(matrix):
     # Swap elements diagonally
     rotated_matrix = np.array([[matrix[1][1], matrix[1][0]],
                                [matrix[0][1], matrix[0][0]]])
-
     return rotated_matrix
 
+def non_zero_values(frequencies):
+    num_non_zero = np.count_nonzero(frequencies)
+    #print("Non Zero Frequencies: ", num_non_zero)
+    return num_non_zero
 
 def load_data():
     reviews_matrix = pd.read_csv("review_data.csv").to_numpy().T
@@ -490,8 +536,11 @@ def main():
                 all_frequencies_test = np.array(all_frequencies_test).T
                 actual_labels = create_actual_labels(combined_testing[:, 0])
                 
-                percent_filter = 0.21
-                percent_filter_array = np.arange(0.40, 0.60, 0.01)
+                #if .46 is entered then Any values in the mask array below the 23rd percentile would be set to 0.
+                #Any values above the 77th percentile would also be set to 0.
+                #In essence, this function would retain only the values within the middle 54% of the data range, setting the lowest 23% and the highest 23% of values to 0.
+                percent_filter = 0.46
+                percent_filter_array = np.arange(0.28, 0.55, 0.01)
                 mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
 
                 filtered_mask = calculate_filter(mask, percent_filter)
@@ -509,19 +558,19 @@ def main():
                                                                                                   upper_threshold,
                                                                                                   lower_threshold,
                                                                                                   actual_labels)
-                #confusion_matrices, uar_matrix, all_fpr, all_fnr, all_EER = (
-                    #percent_filtered_calc(actual_labels, pos_frequencies_test, neg_frequencies_test,percent_filter_array, mask, all_frequencies_test, 10, -10))
+                confusion_matrices, uar_matrix, all_fpr, all_fnr, all_EER, all_neg, all_pos = (
+                    percent_filter_calc(actual_labels, pos_frequencies_test, neg_frequencies_test,percent_filter_array, mask, all_frequencies_test, 100, -100))
                 
-                threshold_matrix = np.arange(best_threshold - 0.5, best_threshold + 0.5, 0.002).reshape(-1, 1)
+                #threshold_matrix = np.arange(best_threshold - 0.5, best_threshold + 0.5, 0.002).reshape(-1, 1)
 
                 predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar = calculate_metrics(actual_labels, pos_cosine, neg_cosine, best_threshold)
                 print_best_threshold(cm, EER, fpr, fnr, Uar, best_threshold)
 
-                #plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER)
-                
+                plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER)
+                plot_nonzero(percent_filter_array, all_neg, all_pos)
+
                 report = statistics(actual_labels, predicted_labels)
-
-
+                
 
             else:
                 print("Hyperparameters are not set. Please set hyperparameters first.")
