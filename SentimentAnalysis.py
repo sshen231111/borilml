@@ -192,6 +192,9 @@ def percent_filter_calc(actual_labels, pos_frequencies_test, neg_frequencies_tes
         all_pos.append(nonzero_pos)
         print("End of Iteration: ", i, "The percent tested: " , percent_filtered)
         print("The EER: ", EER)
+        print("Non-Zero Size Negative: ", nonzero_neg)
+        print("Non-Zero Size Positive: ", nonzero_pos)
+        
 
     return confusion_matrices, uar_matrix, all_fpr, all_fnr, all_EER, all_neg, all_pos
 
@@ -292,8 +295,9 @@ def calculate_mask(negative_freq, positive_freq):
 
 
 def calculate_filter(mask, percent_filter):
-    percent_filter = np.percentile(mask, (percent_filter/2) * 100)
-    inverse_filter = np.percentile(mask, (100 - ((percent_filter / 2)* 100)))
+    sorted_mask = np.sort(mask)
+    percent_filter = np.percentile(sorted_mask, (percent_filter/2) * 100)
+    inverse_filter = np.percentile(sorted_mask, (100 - ((percent_filter / 2)* 100)))
 
     mask[mask < percent_filter] = 0
     mask[mask > inverse_filter] = 0
@@ -540,9 +544,13 @@ def main():
                 #Any values above the 77th percentile would also be set to 0.
                 #In essence, this function would retain only the values within the middle 54% of the data range, setting the lowest 23% and the highest 23% of values to 0.
                 percent_filter = 0.46
-                percent_filter_array = np.arange(0.28, 0.55, 0.01)
+                percent_filter_array = np.arange(0.4, 0.8, 0.01)
                 mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
-
+                print("The non zero values in mask:", non_zero_values(neg_frequencies_test))
+                print("The non zero values in mask:", non_zero_values(pos_frequencies_test))
+                #11,774 Total
+                #Start with 8559 nonzero terms- 73% are nonzero terms
+                #EER Diverges around 6501 nonzero terms- 55% are nonzero terms
                 filtered_mask = calculate_filter(mask, percent_filter)
                 masked_neg = filtered_mask * neg_frequencies_test
                 masked_pos = filtered_mask * pos_frequencies_test
@@ -550,8 +558,6 @@ def main():
                 combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
                 #combined_matrix = np.concatenate((pos_frequencies_test, neg_frequencies_test, all_frequencies_test), axis=1)
                 pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
-
-                
 
                 upper_threshold, lower_threshold, best_threshold = calculate_threshold_bisectional(pos_cosine,
                                                                                                   neg_cosine,
@@ -566,11 +572,12 @@ def main():
                 predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar = calculate_metrics(actual_labels, pos_cosine, neg_cosine, best_threshold)
                 print_best_threshold(cm, EER, fpr, fnr, Uar, best_threshold)
 
+                
                 plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER)
                 plot_nonzero(percent_filter_array, all_neg, all_pos)
 
                 report = statistics(actual_labels, predicted_labels)
-                
+                print("The non zero values in mask:", non_zero_values(mask))
 
             else:
                 print("Hyperparameters are not set. Please set hyperparameters first.")
