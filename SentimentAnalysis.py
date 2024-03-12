@@ -404,9 +404,9 @@ def print_best_threshold(cm, EER, FPR, FNR, UAR, threshold):
     print("Best Possible Unweighted Accuracy: ", UAR)
     
 
-
+# rotate_2x2() - Swap elements diagonally
 def rotate_2x2(matrix):
-    # Swap elements diagonally
+    
     rotated_matrix = np.array([[matrix[1][1], matrix[1][0]],
                                [matrix[0][1], matrix[0][0]]])
     return rotated_matrix
