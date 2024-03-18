@@ -18,7 +18,7 @@ from tabulate import tabulate
 
 
 ########################################################################################################################
-# CSV and file modification
+# region: CSV and file modification
 ########################################################################################################################
 
 def load_csv_column(csv_file, column_index, first_row_header=False):
@@ -110,9 +110,10 @@ def write_data_to_csv(file_path, data):
         csv_writer = csv.writer(csv_file)
         csv_writer.writerow(data)
 
-
+# endregion
+        
 ########################################################################################################################
-# Labeling
+# region: Labeling
 ########################################################################################################################
 
 def classify_labels(positive_scores, negative_scores, threshold):
@@ -163,10 +164,11 @@ def create_actual_labels(ratings):
         else:
             actual_labels.append(0)
     return actual_labels
+# endregion
 
 
 ########################################################################################################################
-# Dictionary manipulation
+# region: Dictionary manipulation
 ########################################################################################################################
 # def generate_review_dictionary(dictionary, reviews):
 #     """
@@ -292,10 +294,10 @@ def generate_freq(review, dictionary, mode):
     neg_frequencies_test = neg_frequencies_test.reshape(-1, 1)
 
     return pos_frequencies_test, neg_frequencies_test
-
+# endregion
 
 ########################################################################################################################
-# Matrix manipulation
+# region: Matrix manipulation
 ########################################################################################################################
 def rotate_2x2(matrix):
     """
@@ -307,10 +309,10 @@ def rotate_2x2(matrix):
     rotated_matrix = np.array([[matrix[1][1], matrix[1][0]],
                                [matrix[0][1], matrix[0][0]]])
     return rotated_matrix
-
+# endregion
 
 ########################################################################################################################
-# Cosine similarity
+# region: Cosine similarity
 ########################################################################################################################
 
 def cosine_similarity_scores(all_frequencies):
@@ -330,10 +332,10 @@ def cosine_similarity_scores(all_frequencies):
         pos_similarities.append(positive_similarity)
         neg_similarities.append(negative_similarity)
     return pos_similarities, neg_similarities
-
+#endregion
 
 ########################################################################################################################
-# Performance evaluation
+# region: Performance evaluation
 ########################################################################################################################
 
 # Calculations
@@ -657,10 +659,10 @@ def non_zero_values(frequencies):
     """
     num_non_zero = np.count_nonzero(frequencies)
     return num_non_zero
-
+#endregion
 
 ########################################################################################################################
-# Graphing
+# region: Graphing
 ########################################################################################################################
 
 def calculate_det(fpr, fnr):
@@ -741,10 +743,10 @@ def plot_threshold_vs_accuracy(threshold_values, uar_values):
     plt.ylabel('Unweighted Accuracy (UAR)')
     plt.grid(True)
     plt.show()
-
+#endregion
 
 ########################################################################################################################
-# Console logging
+# region: Console logging
 ########################################################################################################################
 def print_best_threshold(cm, EER, FPR, FNR, UAR, threshold):
     """
@@ -762,10 +764,10 @@ def print_best_threshold(cm, EER, FPR, FNR, UAR, threshold):
     print("Best Possible FNR: ", FNR)
     print("Best Possible Equal Error Rate: ", EER)
     print("Best Possible Unweighted Accuracy: ", UAR)
-
+# endregion
 
 ########################################################################################################################
-# Main
+# region: Main
 ########################################################################################################################
 def main():
     """
@@ -1067,6 +1069,6 @@ def main():
 
         else:
             print("Invalid command. Please try again.")
+# endregion
 
-
-main()
+main() 
