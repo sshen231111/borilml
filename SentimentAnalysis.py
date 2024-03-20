@@ -416,6 +416,14 @@ def non_zero_values(frequencies):
     #print("Non Zero Frequencies: ", num_non_zero)
     return num_non_zero
 
+def squash(mask, n):
+    temp_mask = mask
+    temp_mask[temp_mask == 0] = 0.0000001
+    temp_mask = np.power(temp_mask, n)
+    temp_mask[temp_mask < 0.00001] = 0
+    return temp_mask
+
+
 def load_data():
     reviews_matrix = pd.read_csv("review_data.csv").to_numpy().T
     review_dict = load_csv_row("review_dict.csv", 0, first_row_header=False)
@@ -544,6 +552,7 @@ def main():
                 #Any values above the 77th percentile would also be set to 0.
                 #In essence, this function would retain only the values within the middle 54% of the data range, setting the lowest 23% and the highest 23% of values to 0.
                 percent_filter = 0.46
+                n = 7
                 percent_filter_array = np.arange(0.4, 0.8, 0.01)
                 mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
                 print("The non zero values in mask:", non_zero_values(neg_frequencies_test))
@@ -551,6 +560,7 @@ def main():
                 #11,774 Total
                 #Start with 8559 nonzero terms- 73% are nonzero terms
                 #EER Diverges around 6501 nonzero terms- 55% are nonzero terms
+                mask = squash(mask, n)
                 filtered_mask = calculate_filter(mask, percent_filter)
                 masked_neg = filtered_mask * neg_frequencies_test
                 masked_pos = filtered_mask * pos_frequencies_test
