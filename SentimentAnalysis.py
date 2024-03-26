@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 from numpy.linalg import norm
 from tabulate import tabulate
-
+import re
 
 
 
@@ -34,33 +34,65 @@ def generate_review_dictionary(dictionary, reviews):
                 review_dict.append(word_cleaned)
     return sorted(review_dict)
 
+def generate_bigrams(text):
+    words = text.split()
+    bigrams = []
+    for i in range(len(words) - 1):
+        bigram = ' '.join([words[i], words[i + 1]])
+        bigrams.append(bigram)
+    return bigrams
+
+
 
 def generate_bag_of_words_frequencies(dictionary, reviews):
     dictionary_mapping = {word: index for index, word in enumerate(dictionary)}
     bag_words = np.zeros(len(dictionary))
     total_words = 0
-    # print("type one")
-    # print(type(reviews))
-    # print("Reviews")
-    # print(reviews.shape)
-    for review_text in reviews:
-        # print("Review_text.shape")
-        # print(review_text[1])
-        # print("type 2")
-        # print(type(review_text))
-        if isinstance(review_text, str) and review_text.lower() != 'nan':
-            words = review_text.split()  # Split review text into words
-            # print("Words in the current review:", words)
+    for review_text_temp in reviews:
+        # print(review_text_temp)
+        if isinstance(review_text_temp, str) and review_text_temp.lower() != 'nan':
+            review_text_clean = review_text_temp.lower()
+            review_text_clean = re.sub(r'\b\d+\b', '', review_text_clean)
+            review_text_clean = re.sub(r'[^\w\s]', '', review_text_clean)
+            # print(review_text_clean)
+            words = generate_bigrams(review_text_clean)
+            # print(words)
             cleaned_words = [word.lower().strip(string.punctuation) for word in words]
-            # print("Cleaned words:", cleaned_words)
             for word in cleaned_words:
+                # print(word)
                 index = dictionary_mapping.get(word)
                 if index is not None:
                     total_words += 1
                     bag_words[index] += 1
-    # print("Total words processed in the review:", total_words)
-    # print("Words in the dictionary:", list(dictionary_mapping.keys()))
     return [(word_count / total_words) for word_count in bag_words] if total_words > 0 else np.zeros(len(dictionary))
+
+
+# def generate_bag_of_words_frequencies(dictionary, reviews):
+#     dictionary_mapping = {word: index for index, word in enumerate(dictionary)}
+#     bag_words = np.zeros(len(dictionary))
+#     total_words = 0
+#     # print("type one")
+#     # print(type(reviews))
+#     # print("Reviews")
+#     # print(reviews.shape)
+#     for review_text in reviews:
+#         # print("Review_text.shape")
+#         # print(review_text[1])
+#         # print("type 2")
+#         # print(type(review_text))
+#         if isinstance(review_text, str) and review_text.lower() != 'nan':
+#             words = review_text.split()  # Split review text into words
+#             # print("Words in the current review:", words)
+#             cleaned_words = [word.lower().strip(string.punctuation) for word in words]
+#             # print("Cleaned words:", cleaned_words)
+#             for word in cleaned_words:
+#                 index = dictionary_mapping.get(word)
+#                 if index is not None:
+#                     total_words += 1
+#                     bag_words[index] += 1
+#     # print("Total words processed in the review:", total_words)
+#     # print("Words in the dictionary:", list(dictionary_mapping.keys()))
+#     return [(word_count / total_words) for word_count in bag_words] if total_words > 0 else np.zeros(len(dictionary))
 
 
 def cosine_similarity_scores(all_frequencies):
@@ -426,7 +458,7 @@ def squash(mask, n):
 
 def load_data():
     reviews_matrix = pd.read_csv("review_data.csv").to_numpy().T
-    review_dict = load_csv_row("review_dict.csv", 0, first_row_header=False)
+    review_dict = load_csv_row("unique_bigrams.csv", 0, first_row_header=False)
     sorted_indices = np.argsort(reviews_matrix[0])
     reviews_matrix = reviews_matrix[:, sorted_indices]
     return reviews_matrix, review_dict
@@ -551,9 +583,9 @@ def main():
                 #if .46 is entered then Any values in the mask array below the 23rd percentile would be set to 0.
                 #Any values above the 77th percentile would also be set to 0.
                 #In essence, this function would retain only the values within the middle 54% of the data range, setting the lowest 23% and the highest 23% of values to 0.
-                percent_filter = 0.46
+                percent_filter = 0
                 n = 7
-                percent_filter_array = np.arange(0.4, 0.8, 0.01)
+                # percent_filter_array = np.arange(0.4, 0.8, 0.01)
                 mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
                 print("The non zero values in mask:", non_zero_values(neg_frequencies_test))
                 print("The non zero values in mask:", non_zero_values(pos_frequencies_test))
@@ -574,8 +606,8 @@ def main():
                                                                                                   upper_threshold,
                                                                                                   lower_threshold,
                                                                                                   actual_labels)
-                confusion_matrices, uar_matrix, all_fpr, all_fnr, all_EER, all_neg, all_pos = (
-                    percent_filter_calc(actual_labels, pos_frequencies_test, neg_frequencies_test,percent_filter_array, mask, all_frequencies_test, 100, -100))
+                # confusion_matrices, uar_matrix, all_fpr, all_fnr, all_EER, all_neg, all_pos = (
+                #     percent_filter_calc(actual_labels, pos_frequencies_test, neg_frequencies_test,percent_filter_array, mask, all_frequencies_test, 100, -100))
                 
                 #threshold_matrix = np.arange(best_threshold - 0.5, best_threshold + 0.5, 0.002).reshape(-1, 1)
 
@@ -583,8 +615,8 @@ def main():
                 print_best_threshold(cm, EER, fpr, fnr, Uar, best_threshold)
 
                 
-                plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER)
-                plot_nonzero(percent_filter_array, all_neg, all_pos)
+                # plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER)
+                # plot_nonzero(percent_filter_array, all_neg, all_pos)
 
                 report = statistics(actual_labels, predicted_labels)
                 print("The non zero values in mask:", non_zero_values(mask))
