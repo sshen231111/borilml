@@ -448,13 +448,9 @@ def non_zero_values(frequencies):
     #print("Non Zero Frequencies: ", num_non_zero)
     return num_non_zero
 
-def squash(mask, n):
-    temp_mask = mask
-    temp_mask[temp_mask == 0] = 0.0000001
-    temp_mask = np.power(temp_mask, n)
-    temp_mask[temp_mask < 0.00001] = 0
-    return temp_mask
 
+def squash(mask, n):
+    return np.power(mask, n)
 
 def load_data():
     reviews_matrix = pd.read_csv("review_data.csv").to_numpy().T
@@ -462,6 +458,24 @@ def load_data():
     sorted_indices = np.argsort(reviews_matrix[0])
     reviews_matrix = reviews_matrix[:, sorted_indices]
     return reviews_matrix, review_dict
+
+
+def save_to_csv(array, file_name):
+    """
+    Save the given array to a CSV file.
+
+    Parameters:
+        array (list or numpy array): The array to be saved.
+        file_name (str): The name of the CSV file (include .csv extension).
+
+    Returns:
+        None
+    """
+    # Convert the array to a pandas DataFrame
+    df = pd.DataFrame(array)
+
+    # Write the DataFrame to the CSV file
+    df.to_csv(file_name, index=False)
 
 
 def main():
@@ -579,7 +593,8 @@ def main():
                 #Contains the dictionary frequencies of words
                 all_frequencies_test = np.array(all_frequencies_test).T
                 actual_labels = create_actual_labels(combined_testing[:, 0])
-                
+                # save_to_csv(all_frequencies_test, "all_freq_test_bigram")
+                # save_to_csv(actual_labels, "actual_labels_bigram")
                 #if .46 is entered then Any values in the mask array below the 23rd percentile would be set to 0.
                 #Any values above the 77th percentile would also be set to 0.
                 #In essence, this function would retain only the values within the middle 54% of the data range, setting the lowest 23% and the highest 23% of values to 0.
@@ -614,7 +629,6 @@ def main():
                 predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar = calculate_metrics(actual_labels, pos_cosine, neg_cosine, best_threshold)
                 print_best_threshold(cm, EER, fpr, fnr, Uar, best_threshold)
 
-                
                 # plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER)
                 # plot_nonzero(percent_filter_array, all_neg, all_pos)
 
