@@ -453,8 +453,8 @@ def squash(mask, n):
     return np.power(mask, n)
 
 def load_data():
-    reviews_matrix = pd.read_csv("review_data.csv").to_numpy().T
-    review_dict = load_csv_row("unique_bigrams.csv", 0, first_row_header=False)
+    reviews_matrix = pd.read_csv("clean_review_data.csv").to_numpy().T
+    review_dict = load_csv_row("clean_bigrams.csv", 0, first_row_header=False)
     sorted_indices = np.argsort(reviews_matrix[0])
     reviews_matrix = reviews_matrix[:, sorted_indices]
     return reviews_matrix, review_dict
@@ -593,8 +593,8 @@ def main():
                 #Contains the dictionary frequencies of words
                 all_frequencies_test = np.array(all_frequencies_test).T
                 actual_labels = create_actual_labels(combined_testing[:, 0])
-                # save_to_csv(all_frequencies_test, "all_freq_test_bigram")
-                # save_to_csv(actual_labels, "actual_labels_bigram")
+                # save_to_csv(all_frequencies_test, "all_freq_test_unigram")
+                # save_to_csv(actual_labels, "actual_labels_unigram")
                 #if .46 is entered then Any values in the mask array below the 23rd percentile would be set to 0.
                 #Any values above the 77th percentile would also be set to 0.
                 #In essence, this function would retain only the values within the middle 54% of the data range, setting the lowest 23% and the highest 23% of values to 0.
@@ -608,6 +608,7 @@ def main():
                 #Start with 8559 nonzero terms- 73% are nonzero terms
                 #EER Diverges around 6501 nonzero terms- 55% are nonzero terms
                 mask = squash(mask, n)
+                # save_to_csv(mask, "squashed_unigram_mask")
                 filtered_mask = calculate_filter(mask, percent_filter)
                 masked_neg = filtered_mask * neg_frequencies_test
                 masked_pos = filtered_mask * pos_frequencies_test
