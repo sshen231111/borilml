@@ -26,7 +26,6 @@ def generate_bag_of_words_frequencies(dictionary, reviews):
             # print(words)
             cleaned_words = [word.lower().strip(string.punctuation) for word in words]
             for word in cleaned_words:
-                # print(word)
                 index = dictionary_mapping.get(word)
                 if index is not None:
                     total_words += 1
@@ -227,7 +226,7 @@ def statistics(actual_labels, predicted_labels):
 
 
 # Calculates the weight mask and returns it
-def calculate_mask(negative_freq, positive_freq):
+def calculate_mask(positive_freq, negative_freq):
     delta = abs(positive_freq - negative_freq)
     summation = negative_freq + positive_freq
     modified_array = np.where(summation == 0, 1, summation)

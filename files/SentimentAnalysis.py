@@ -7,6 +7,7 @@ import wordcloud
 
 PERCENTAGE_TESTING = 0.1
 PERCENTAGE_TRAINING = 1 - PERCENTAGE_TESTING
+LENGTH_OF_TEXT = 100000
 
 
 def print_commands():
@@ -16,6 +17,107 @@ def print_commands():
     print("I - Input hyperparameters")
     print("P - Print values")
     print("E - Terminate program")
+
+
+def print_data(hyperparameters, review_dict, pos_frequencies_train, neg_frequencies_train, pos_frequencies_test,
+               neg_frequencies_test, lower_threshold, upper_threshold, EER, thresholds, confusion_matrices, uar_matrix,
+               report):
+    print("Printing data...\n")
+
+    # Print the hyperparameters
+    print("Current parameters:")
+    if hyperparameters:
+        print(tabulate(hyperparameters, headers=["Parameter", "Value"], tablefmt="grid"))
+    else:
+        print("Hyperparameters are not set.")
+
+    # Check the length of the dictionary
+    print("\nLength of the dictionary:", len(review_dict))
+
+    # Print the bag-of-words frequencies if they are set
+    if pos_frequencies_train is not None:
+        print("\nBag-of-words frequencies (Positive):")
+        print(pos_frequencies_train[500:800])
+    if neg_frequencies_train is not None:
+        print("\nBag-of-words frequencies (Negative):")
+        print(neg_frequencies_train[800:1000])
+
+    # Print the frequencies for testing data if they are set
+    if pos_frequencies_test is not None:
+        print("\nPositive Reviews Frequencies (first 5):")
+        print(pos_frequencies_test[:5])
+    if neg_frequencies_test is not None:
+        print("\nNegative Reviews Frequencies (first 5):")
+        print(neg_frequencies_test[:5])
+
+    # Print threshold values and EER if they are set
+    if lower_threshold is not None and upper_threshold is not None:
+        print("\nThe bounds are:", lower_threshold, "to", upper_threshold)
+    if EER is not None:
+        print("Equal Error Rate:", EER)
+
+    # Print peak results if available
+    if thresholds is not None and confusion_matrices is not None:
+        if len(thresholds) > 1:
+            max_index = classifier.find_max(uar_matrix)
+            print("\nThe peak results are:\n")
+            print("Threshold:", thresholds[max_index])
+            print("Confusion Matrix:")
+            headers = ["", "Expected Positive", "Expected Negative"]
+            matrix_data = [["", "P", "N"],
+                           ["P", confusion_matrices[max_index][1, 1], confusion_matrices[max_index][1, 0]],
+                           ["N", confusion_matrices[max_index][0, 1], confusion_matrices[max_index][0, 0]]]
+            print(tabulate(matrix_data, headers=headers, tablefmt="grid"))
+            classifier.calculate_performance_matrix(confusion_matrices[max_index], 1)
+        else:
+            print("\nThe peak results are:\n")
+            print("Threshold:", thresholds[0])
+            print("Confusion Matrix:")
+            headers = ["", "Expected Positive", "Expected Negative"]
+            matrix_data = [["", "P", "N"],
+                           ["P", confusion_matrices[0][1, 1], confusion_matrices[0][1, 0]],
+                           ["N", confusion_matrices[0][0, 1], confusion_matrices[0][0, 0]]]
+            print(tabulate(matrix_data, headers=headers, tablefmt="grid"))
+            classifier.calculate_performance_matrix(confusion_matrices[0], 1)
+    else:
+        print("\nPeak results are not available.")
+
+    # Print the report if it is available
+    if report is not None:
+        print("\nClassification Report:")
+        print(report)
+
+
+def update_hyperparameters():
+    print("Setting hyperparameters...")
+
+    lower_threshold = float(input("Enter lower threshold value (Recommended value=-1): "))
+    upper_threshold = float(input("Enter upper threshold value (Recommended value=1): "))
+    lower_bound = float(input("Enter lower bound value (Recommended value=-0.1, an integer or float that's "
+                              "less than zero): "))
+    upper_bound = float(input("Enter upper bound value (Recommended value=0.1, an integer or float that's "
+                              "greater than zero): "))
+    step_value = float(input("Enter step value (Recommended value=0.02): "))
+    threshold_values = np.arange(lower_bound, upper_bound, step_value)
+
+    print("Hyperparameters set successfully...")
+    return lower_threshold, upper_threshold, lower_bound, upper_bound, step_value, threshold_values
+
+
+def generate_graphs(thresholds, uar_matrix, all_fpr, all_fnr):
+    print("Generating graphs...")
+
+    if thresholds is not None and uar_matrix is not None and all_fpr is not None and all_fnr is not None:
+        classifier.plot_threshold_vs_accuracy(thresholds, uar_matrix)
+        classifier.calculate_det(all_fpr, all_fnr)
+    else:
+        print("Graphs cannot be generated. Required data is missing.")
+
+
+def masking(normalized_mask, review_dict, file_name_csv, file_name_txt):
+    synthetic_text = wordcloud.generate_synthetic_text(review_dict, normalized_mask, LENGTH_OF_TEXT)
+    csv_manipulation.save_synthetic_text_to_csv(synthetic_text, file_name_csv)
+    csv_manipulation.save_synthetic_text_to_txt(synthetic_text, file_name_txt)
 
 
 def main():
@@ -28,6 +130,7 @@ def main():
     # mode = "U"
 
     # Other variables
+    threshold_values = np.arange(lower_bound, upper_bound, step_value)
     pos_frequencies_train = None
     neg_frequencies_train = None
     pos_frequencies_test = None
@@ -43,23 +146,14 @@ def main():
     all_fpr = None
     all_fnr = None
     parameters_set = False
-    length_of_text = 214785
 
     # Load data
     reviews_matrix, review_dict = csv_manipulation.load_data()
+    print("System start up...")
+    print("Hyperparameters set to default values...")
     print_commands()
 
     while True:
-        print("Setting hyperparameters...")
-        lower_threshold = float(input("Enter lower threshold value (Recommended value=-1): "))
-        upper_threshold = float(input("Enter upper threshold value (Recommended value=1): "))
-        lower_bound = float(input("Enter lower bound value (Recommended value=-0.1, an integer or float that's "
-                                          "less than zero): "))
-        upper_bound = float(input("Enter upper bound value (Recommended value=0.1, an integer or float that's "
-                                          "greater than zero): "))
-        step_value = float(input("Enter step value (Recommended value=0.02): "))
-        threshold_values = np.arange(lower_bound, upper_bound, step_value)
-
         # Store hyperparameters in a list of tuples
         hyperparameters = [
             ("Percentage for testing data", PERCENTAGE_TESTING),
@@ -71,9 +165,6 @@ def main():
             ("Step value", step_value)
         ]
 
-        parameters_set = True
-
-        print("Press 'H' for a list of commands.")
         command = input("Enter a command: ").strip().upper()
 
         if command == 'H':
@@ -86,10 +177,10 @@ def main():
             reviews_matrix = reviews_matrix[:, sorted_indices]
 
             review_training, review_testing = train_test_split(reviews_matrix.T, test_size=PERCENTAGE_TESTING,
-                                                                   random_state=42)
+                                                               random_state=42)
             # These variables contain the respective positive and negative reviews with their reviews
-            neg_testing = review_testing[review_testing[:, 0] < 3]
             pos_testing = review_testing[review_testing[:, 0] > 3]
+            neg_testing = review_testing[review_testing[:, 0] < 3]
 
             # These variables contain the frequencies of the positive and negative bags of words
             pos_frequencies_test, neg_frequencies_test = classifier.generate_freq(review_training, review_dict)
@@ -110,6 +201,7 @@ def main():
                     review_freq = classifier.generate_bag_of_words_frequencies(review_dict, [review_text])
                     # Append review_freq to the list
                     all_frequencies_test.append(review_freq)
+                    print("Run succeeded: " + str(run))
                 except Exception as e:
                     print("Run failed: " + str(run))
                     print("Reason for failure: " + str(e))
@@ -126,18 +218,28 @@ def main():
             percent_filter = 0
             n = 7
             # percent_filter_array = np.arange(0.4, 0.8, 0.01)
-            mask = classifier.calculate_mask(neg_frequencies_test, pos_frequencies_test)
+
+            masking(pos_frequencies_test, review_dict,
+                    "../data/synthetic_pos.csv", "../data/synthetic_pos_list.txt")
+            pos_squashed = classifier.squash(pos_frequencies_test, n)
+            masking(pos_squashed, review_dict,
+                    "../data/synthetic_pos_squashed.csv", "../data/synthetic_pos_squashed_list.txt")
+
+            masking(neg_frequencies_test, review_dict,
+                    "../data/synthetic_neg.csv", "../data/synthetic_neg_list.txt")
+            pos_squashed = classifier.squash(pos_frequencies_test, n)
+            masking(pos_squashed, review_dict,
+                    "../data/synthetic_neg_squashed.csv", "../data/synthetic_neg_squashed_list.txt")
+
+            mask = classifier.calculate_mask(pos_frequencies_test, neg_frequencies_test)
             normalized_mask = classifier.normalize_mask(mask)
-            # print(normalized_mask[:400])
-            synthetic_text = wordcloud.generate_synthetic_text(review_dict, normalized_mask, length_of_text)
-            csv_manipulation.save_synthetic_text_to_csv(synthetic_text, "../data/synthetic_normalized.csv")
-            csv_manipulation.save_synthetic_text_to_txt(synthetic_text, "../data/synthetic_normalized_list.txt")
+            masking(normalized_mask, review_dict, "../data/synthetic_normalized_all.csv",
+                    "../data/synthetic_normalized_all_list.txt")
 
             mask_squashed = classifier.squash(mask, n)
             normalized_mask_squashed = classifier.normalize_mask(mask_squashed)
-            synthetic_text_two = wordcloud.generate_synthetic_text(review_dict, normalized_mask_squashed, length_of_text)
-            csv_manipulation.save_synthetic_text_to_csv(synthetic_text_two, "../data/synthetic_normalized_squashed.csv")
-            csv_manipulation.save_synthetic_text_to_txt(synthetic_text, "../data/synthetic_normalized_squashed_list.txt")
+            masking(normalized_mask_squashed, review_dict, "../data/synthetic_normalized_squashed_all.csv",
+                    "../data/synthetic_normalized_squashed_all_list.txt")
 
             print("The non zero values in mask:", classifier.non_zero_values(neg_frequencies_test))
             print("The non zero values in mask:", classifier.non_zero_values(pos_frequencies_test))
@@ -166,9 +268,9 @@ def main():
             # threshold_matrix = np.arange(best_threshold - 0.5, best_threshold + 0.5, 0.002).reshape(-1, 1)
 
             predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar = classifier.calculate_metrics(actual_labels,
-                                                                                                     pos_cosine,
-                                                                                                     neg_cosine,
-                                                                                                     best_threshold)
+                                                                                                 pos_cosine,
+                                                                                                 neg_cosine,
+                                                                                                 best_threshold)
             classifier.print_best_threshold(cm, EER, fpr, fnr, Uar, best_threshold)
 
             # plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER)
@@ -178,100 +280,23 @@ def main():
             print("The non zero values in mask:", classifier.non_zero_values(mask))
 
         elif command == 'G':
-            print("Generating graphs...")
-
-            if thresholds is not None and uar_matrix is not None and all_fpr is not None and all_fnr is not None:
-                classifier.plot_threshold_vs_accuracy(thresholds, uar_matrix)
-                classifier.calculate_det(all_fpr, all_fnr)
-            else:
-                print("Graphs cannot be generated. Required data is missing.")
+            generate_graphs(thresholds, uar_matrix, all_fpr, all_fnr)
 
         elif command == 'I':
-            print("Setting hyperparameters...")
-
-            lower_threshold = float(input("Enter lower threshold value (Recommended value=-1): "))
-            upper_threshold = float(input("Enter upper threshold value (Recommended value=1): "))
-            lower_bound = float(input("Enter lower bound value (Recommended value=-0.1, an integer or float that's "
-                                      "less than zero): "))
-            upper_bound = float(input("Enter upper bound value (Recommended value=0.1, an integer or float that's "
-                                      "greater than zero): "))
-            step_value = float(input("Enter step value (Recommended value=0.02): "))
-            threshold_values = np.arange(lower_bound, upper_bound, step_value)
-
-            print("Hyperparameters set successfully...")
+            lower_threshold, upper_threshold, lower_bound, upper_bound, step_value, threshold_values = update_hyperparameters()
 
         elif command == 'P':
-            print("Printing data...\n")
-
-            # Print the hyperparameters
-            print("Current parameters:")
-            if hyperparameters:
-                print(tabulate(hyperparameters, headers=["Parameter", "Value"], tablefmt="grid"))
-            else:
-                print("Hyperparameters are not set.")
-
-            # Check the length of the dictionary
-            print("\nLength of the dictionary:", len(review_dict))
-
-            # Print the bag-of-words frequencies if they are set
-            if pos_frequencies_train is not None:
-                print("\nBag-of-words frequencies (Positive):")
-                print(pos_frequencies_train[500:800])
-            if neg_frequencies_train is not None:
-                print("\nBag-of-words frequencies (Negative):")
-                print(neg_frequencies_train[800:1000])
-
-            # Print the frequencies for testing data if they are set
-            if pos_frequencies_test is not None:
-                print("\nPositive Reviews Frequencies (first 5):")
-                print(pos_frequencies_test[:5])
-            if neg_frequencies_test is not None:
-                print("\nNegative Reviews Frequencies (first 5):")
-                print(neg_frequencies_test[:5])
-
-            # Print threshold values and EER if they are set
-            if lower_threshold is not None and upper_threshold is not None:
-                print("\nThe bounds are:", lower_threshold, "to", upper_threshold)
-            if EER is not None:
-                print("Equal Error Rate:", EER)
-
-            # Print peak results if available
-            if thresholds is not None and confusion_matrices is not None:
-                if len(thresholds) > 1:
-                    max_index = classifier.find_max(uar_matrix)
-                    print("\nThe peak results are:\n")
-                    print("Threshold:", thresholds[max_index])
-                    print("Confusion Matrix:")
-                    headers = ["", "Expected Positive", "Expected Negative"]
-                    matrix_data = [["", "P", "N"],
-                                    ["P", confusion_matrices[max_index][1, 1], confusion_matrices[max_index][1, 0]],
-                                    ["N", confusion_matrices[max_index][0, 1], confusion_matrices[max_index][0, 0]]]
-                    print(tabulate(matrix_data, headers=headers, tablefmt="grid"))
-                    classifier.calculate_performance_matrix(confusion_matrices[max_index], 1)
-                else:
-                    print("\nThe peak results are:\n")
-                    print("Threshold:", thresholds[0])
-                    print("Confusion Matrix:")
-                    headers = ["", "Expected Positive", "Expected Negative"]
-                    matrix_data = [["", "P", "N"],
-                                    ["P", confusion_matrices[0][1, 1], confusion_matrices[0][1, 0]],
-                                    ["N", confusion_matrices[0][0, 1], confusion_matrices[0][0, 0]]]
-                    print(tabulate(matrix_data, headers=headers, tablefmt="grid"))
-                    classifier.calculate_performance_matrix(confusion_matrices[0], 1)
-            else:
-                print("\nPeak results are not available.")
-
-            # Print the report if it is available
-            if report is not None:
-                print("\nClassification Report:")
-                print(report)
+            print_data(hyperparameters, review_dict, pos_frequencies_train, neg_frequencies_train, pos_frequencies_test,
+                       neg_frequencies_test, lower_threshold, upper_threshold, EER, thresholds, confusion_matrices,
+                       uar_matrix,
+                       report)
 
         elif command == 'E':
             print("Program terminated.")
             break
 
         else:
-            print("Invalid command. Please try again.")
+            print("Invalid command. Please try again. Press 'H' for a list of valid commands.")
 
 
 main()
