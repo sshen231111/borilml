@@ -53,3 +53,22 @@ def save_synthetic_text_to_csv(synthetic_text, file_name):
 
     # Save the DataFrame to a CSV file
     df.to_csv(file_name, index=False)
+
+
+def save_synthetic_text_to_txt(synthetic_text, file_name):
+    # Count the occurrences of each word in the synthetic text
+    word_counts = Counter(synthetic_text)
+
+    # Create a list to hold the repeated words
+    repeated_words = []
+
+    # Repeat each word according to its count
+    for word, count in word_counts.items():
+        repeated_words.extend([word] * count)
+
+    # Convert the list of repeated words to a comma-separated string
+    text = ', '.join(repeated_words)
+
+    # Save the string to a text file
+    with open(file_name, 'w') as f:
+        f.write(text)
