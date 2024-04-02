@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 from numpy.linalg import norm
 from tabulate import tabulate
+from wordcloud import WordCloud
 
 
 
@@ -84,6 +85,8 @@ def classify_labels(positive_scores, negative_scores, threshold):
 
 
 def label_classifier(pscore, nscore, threshold):
+    pscore = pscore.astype(float)
+    nscore = nscore.astype(float)
     label = np.zeros(len(pscore), dtype=int)
     scores = np.zeros(len(pscore), dtype=float)
     # assigns labels as Positive(1) or Negative(0)
@@ -358,6 +361,9 @@ def calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold, low
             break  
         
     mid_threshold = (upper_threshold + lower_threshold) / 2
+    
+
+    
     return upper_threshold, lower_threshold, mid_threshold
 
 
@@ -404,9 +410,19 @@ def print_best_threshold(cm, EER, FPR, FNR, UAR, threshold):
     print("Best Possible Unweighted Accuracy: ", UAR)
     
 
-# rotate_2x2() - Swap elements diagonally
+def generate_word_cloud(text_data):
+    # Generate word cloud
+    text_data = ' '.join(map(str, text_data))
+    wordcloud = WordCloud(width=800, height=400, background_color='white',  max_words = 100).generate(text_data)
+
+    # Display the generated word cloud
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.show()
+
 def rotate_2x2(matrix):
-    
+    # Swap elements diagonally
     rotated_matrix = np.array([[matrix[1][1], matrix[1][0]],
                                [matrix[0][1], matrix[0][0]]])
     return rotated_matrix
@@ -418,10 +434,83 @@ def non_zero_values(frequencies):
 
 def load_data():
     reviews_matrix = pd.read_csv("review_data.csv").to_numpy().T
-    review_dict = load_csv_row("review_dict.csv", 0, first_row_header=False)
+    review_dict = load_csv_row("clean_unigram.csv", 0, first_row_header=False)
     sorted_indices = np.argsort(reviews_matrix[0])
     reviews_matrix = reviews_matrix[:, sorted_indices]
     return reviews_matrix, review_dict
+#Add this function
+def read_csv_file(file_path):
+    neg_testing = []
+    pos_testing = []
+
+    with open(file_path, 'r', newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        #Uncomment next line if the labels from the CSV are not removed
+        #next(reader)
+        for row in reader:
+            if len(row) == 2:  # Ensure each row has two columns
+                neg_testing.append(row[0])
+                pos_testing.append(row[1])
+
+    return np.array(neg_testing), np.array(pos_testing)
+#Add this function
+def read_csv_label(file_path):
+    label = []
+    with open(file_path, 'r', newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        #Uncomment next line if the labels from the CSV are not removed
+        #next(reader)
+        for row in reader:
+                label.append(int(row[0]))
+
+    return np.array(label)
+#Not nessecary but may be nice
+def save_to_excel(array, file_name):
+    """
+    Save the given array to an Excel sheet.
+
+    Parameters:
+        array (list or numpy array): The array to be saved.
+        file_name (str): The name of the Excel file (include .xlsx extension).
+
+    Returns:
+        None
+    """
+    # Convert the array to a pandas DataFrame
+    df = pd.DataFrame(array)
+
+    # Write the DataFrame to the Excel sheet
+    #df.to_excel(file_name, index=False)
+    total_df_size = df.memory_usage(deep=True).sum()
+    available_memory = 12 * 1024 * 1024 * 1024  # 12 GB in bytes
+
+# Calculate the chunk size based on available memory
+    chunk_size = int((available_memory / total_df_size) * len(df))
+
+    #chunk_size = 1000  # Adjust this according to your memory constraints
+
+# Write the DataFrame to the Excel sheet in chunks
+    with pd.ExcelWriter(file_name, engine='xlsxwriter') as writer:
+        for i in range(0, len(df), chunk_size):
+            df_chunk = df.iloc[i:i+chunk_size]
+            df_chunk.to_excel(writer, index=False, startrow=i)
+#Not nessecary but may be nice
+def save_to_csv(array, file_name):
+    """
+    Save the given array to a CSV file.
+
+    Parameters:
+        array (list or numpy array): The array to be saved.
+        file_name (str): The name of the CSV file (include .csv extension).
+
+    Returns:
+        None
+    """
+    # Convert the array to a pandas DataFrame
+    df = pd.DataFrame(array)
+
+    # Write the DataFrame to the CSV file
+    df.to_csv(file_name, index=False)
 
 
 def main():
@@ -460,8 +549,8 @@ def main():
             default = input("Enter Y for default settings): ")
             if default == "Y":
                 percentage_testing = 0.1
-                lower_threshold = -10
-                upper_threshold = 10
+                lower_threshold = 0
+                upper_threshold = 1.5
                 lower_bound = -0.1
                 upper_bound = 0.1
                 step_value = 0.02
@@ -516,6 +605,9 @@ def main():
                 neg_testing = review_testing[review_testing[:, 0] < 3]
                 pos_testing = review_testing[review_testing[:, 0] > 3]
 
+                # neg_testing = review_training[review_training[:, 0] < 3]
+                # pos_testing = review_training[review_training[:, 0] > 3]
+
                 #These variables contain the frequencies of the positive and negativre bags of words
                 pos_frequencies_test, neg_frequencies_test = generate_freq(review_training, review_dict)
 
@@ -523,7 +615,10 @@ def main():
                 combined_testing = np.concatenate((pos_testing, neg_testing), axis=0)
 
                 all_frequencies_test = []
-
+                # all_text = []
+                # for i in range(len(pos_testing)):
+                #     review_text = pos_testing[i][1]
+                #     all_text.append(review_text)
                 for i in range(len(combined_testing)):
                     review_rate = combined_testing[i][0]
                     review_text = combined_testing[i][1]
@@ -534,38 +629,56 @@ def main():
                         review_freq = generate_bag_of_words_frequencies(review_dict, [review_text])
                         # Append review_freq to the list
                         all_frequencies_test.append(review_freq)
+                        if not isinstance(review_text, str):
+                            review_text = str(review_text)
+                        #all_text.append(review_text)
                     except:
                         print(review_text)
                 #Contains the dictionary frequencies of words
                 all_frequencies_test = np.array(all_frequencies_test).T
-                actual_labels = create_actual_labels(combined_testing[:, 0])
+                #actual_labels = create_actual_labels(combined_testing[:, 0])
                 
                 #if .46 is entered then Any values in the mask array below the 23rd percentile would be set to 0.
                 #Any values above the 77th percentile would also be set to 0.
                 #In essence, this function would retain only the values within the middle 54% of the data range, setting the lowest 23% and the highest 23% of values to 0.
-                percent_filter = 0.46
-                percent_filter_array = np.arange(0.4, 0.8, 0.01)
-                mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
-                print("The non zero values in mask:", non_zero_values(neg_frequencies_test))
-                print("The non zero values in mask:", non_zero_values(pos_frequencies_test))
-                #11,774 Total
-                #Start with 8559 nonzero terms- 73% are nonzero terms
-                #EER Diverges around 6501 nonzero terms- 55% are nonzero terms
-                filtered_mask = calculate_filter(mask, percent_filter)
-                masked_neg = filtered_mask * neg_frequencies_test
-                masked_pos = filtered_mask * pos_frequencies_test
+                percent_filter = 0.47
+                
+                #generate_word_cloud(all_text)
+                
+                # print("Begin")
+                # #save_to_csv(all_frequencies_test, "BOW_new.csv")
+                # #save_to_csv(neg_frequencies_test, "BOW_neg.csv")
+                # save_to_csv(actual_labels, "labels_new.csv")
+                # print("Finished")
+                # percent_filter_array = np.arange(0.4, 0.8, 0.01)
+                # mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
+                # print("The non zero values in mask:", non_zero_values(neg_frequencies_test))
+                # print("The non zero values in mask:", non_zero_values(pos_frequencies_test))
+                # #11,774 Total
+                # #Start with 8559 nonzero terms- 73% are nonzero terms
+                # #EER Diverges around 6501 nonzero terms- 55% are nonzero terms
+                # filtered_mask = calculate_filter(mask, percent_filter)
+                # masked_neg = filtered_mask * neg_frequencies_test
+                # masked_pos = filtered_mask * pos_frequencies_test
 
-                combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
-                #combined_matrix = np.concatenate((pos_frequencies_test, neg_frequencies_test, all_frequencies_test), axis=1)
-                pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
+                # combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
+                # #combined_matrix = np.concatenate((pos_frequencies_test, neg_frequencies_test, all_frequencies_test), axis=1)
+                # pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
+
+                neg_cosine, pos_cosine = read_csv_file("NN1_Scores.csv")
+                actual_labels = read_csv_label("NN1_Labels.csv")
+
+                # actual_labels = read_csv_label("NN2_Scores.csv")
+                # neg_cosine, pos_cosine = read_csv_file("NN2_Labels.csv")
+
 
                 upper_threshold, lower_threshold, best_threshold = calculate_threshold_bisectional(pos_cosine,
                                                                                                   neg_cosine,
                                                                                                   upper_threshold,
                                                                                                   lower_threshold,
                                                                                                   actual_labels)
-                confusion_matrices, uar_matrix, all_fpr, all_fnr, all_EER, all_neg, all_pos = (
-                    percent_filter_calc(actual_labels, pos_frequencies_test, neg_frequencies_test,percent_filter_array, mask, all_frequencies_test, 100, -100))
+                #confusion_matrices, uar_matrix, all_fpr, all_fnr, all_EER, all_neg, all_pos = (
+                    #percent_filter_calc(actual_labels, pos_frequencies_test, neg_frequencies_test,percent_filter_array, mask, all_frequencies_test, 100, -100))
                 
                 #threshold_matrix = np.arange(best_threshold - 0.5, best_threshold + 0.5, 0.002).reshape(-1, 1)
 
@@ -573,11 +686,11 @@ def main():
                 print_best_threshold(cm, EER, fpr, fnr, Uar, best_threshold)
 
                 
-                plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER)
-                plot_nonzero(percent_filter_array, all_neg, all_pos)
+                #plot_metrics(percent_filter_array, all_fpr, all_fnr, all_EER)
+                #plot_nonzero(percent_filter_array, all_neg, all_pos)
 
                 report = statistics(actual_labels, predicted_labels)
-                print("The non zero values in mask:", non_zero_values(mask))
+                #print("The non zero values in mask:", non_zero_values(mask))
 
             else:
                 print("Hyperparameters are not set. Please set hyperparameters first.")
@@ -606,6 +719,24 @@ def main():
             percentage_training = 1 - percentage_testing
 
             print("Hyperparameters set successfully...")
+        elif command == 'N':
+            #Only add this elif block and corresponding functions to run this
+            #For the 1st Neural Network
+            neg_cosine, pos_cosine = read_csv_file("prediction.csv")
+            actual_labels = read_csv_label("labels_actual.csv")
+            #For the 2nd Neural Network
+            # actual_labels = read_csv_label("y_test_label.csv")
+            # neg_cosine, pos_cosine = read_csv_file("prediction_NN.csv")
+
+            upper_threshold, lower_threshold, best_threshold = calculate_threshold_bisectional(pos_cosine,
+                                                                                                  neg_cosine,
+                                                                                                  upper_threshold,
+                                                                                                  lower_threshold,
+                                                                                                  actual_labels)
+
+            predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar = calculate_metrics(actual_labels, pos_cosine, neg_cosine, best_threshold)
+            print_best_threshold(cm, EER, fpr, fnr, Uar, best_threshold)
+            report = statistics(actual_labels, predicted_labels)
 
         elif command == 'P':
             print("Printing data...\n")
