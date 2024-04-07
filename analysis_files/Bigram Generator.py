@@ -2,22 +2,18 @@ import csv
 import re
 from nltk import ngrams
 
-
 # Function to tokenize text into words without numbers and special characters
 def tokenize(text):
     # Use regular expression to find words without numbers and special characters
     words = re.findall(r'\b[a-zA-Z]+\b', text.lower())
     return words
 
-
 # Function to generate all possible bigrams from a list of words
 def generate_bigrams(words):
     return [' '.join(bigram) for bigram in ngrams(words, 2)]
 
-
 # Initialize an empty set to store unique bigrams
 bigram_set = set()
-
 
 def clean_string(text):
     # Lowercase the string
@@ -26,7 +22,6 @@ def clean_string(text):
     text = re.sub(r'[0-9]', '', text)
     text = re.sub(r'[^\w\s]', '', text)
     return text
-
 
 # Read the CSV file containing the reviews
 with open('review_data.csv', 'r', encoding='utf-8') as file:
@@ -39,7 +34,9 @@ with open('review_data.csv', 'r', encoding='utf-8') as file:
 
         bigram_set.update(bigram for bigram in bigrams if bigram in review_text)
 
+
 print(len(bigram_set))
+
 
 # Save the unique bigrams as comma-separated values in a single line
 with open('unique_bigrams.csv', 'w', newline='', encoding='utf-8') as file:

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8bf554e2-b478-4adf-a546-6db5f494362d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/analysis_files/Bigram Generator.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/analysis_files/SentimentAnalysis2_28.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/DNN/Squash_PF_EER_results.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/dictionaries/bigram_dict(review).csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/dictionaries/unigram_dict(review).csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/dictionaries/unique_bigrams.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/reviews/empty_removed_clean_review_data.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/reviews/review_data.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/wordcloud/synthetic_bigrams_normalized.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/wordcloud/synthetic_neg.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/wordcloud/synthetic_pos.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/discarded/SentimentAnalysis.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/NN.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/NN_positive_negative.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/classifier.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/cloud_maker.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/commands.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/csv_tasks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/dictionary_maker.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/ngram_maker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bigram Generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/Bigram Generator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SentimentAnalysis.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/SentimentAnalysis2_28.py" beforeDir="false" afterPath="$PROJECT_DIR$/SentimentAnalysis2_28.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Squash_PF_EER_results.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/clean_bigrams_new.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/empty_removed_clean_review_data.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/review_data.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/review_dict.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/unique_bigrams.csv" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2eeGLvklwcPKUV75BdanC8cb7U4" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Grant&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  }
+}</component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8bf554e2-b478-4adf-a546-6db5f494362d" name="Changes" comment="" />
+      <created>1712257584316</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1712257584316</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
+</project>
