@@ -24,8 +24,6 @@ from numpy.linalg import norm
 from tabulate import tabulate
 
 
-
-
 def load_csv_column(csv_file, column_index, first_row_header=False):
     df = pd.read_csv(csv_file, header=None if not first_row_header else 'infer')
     return df.iloc[:, column_index]
@@ -244,6 +242,7 @@ def calculate_filter(mask_temp, percent_filter):
     mask_temp[mask_temp < filter_threshold] = 0
     return mask_temp, num_elements_to_zero
 
+
 def calculate_EER(fpr, fnr):
     EER_Matrix = np.empty(len(fpr))
     for i in range(len(fpr)):
@@ -359,8 +358,6 @@ def best_threshold(actual_labels, pos_cosine, neg_cosine, mid_threshold):
     cm = rotate_2x2(cm)
     print(f"Rotated Possible Confusion Matrix:\n{cm}")
 
-
-
     total_valid_inputs = true_acceptance + false_rejection  # Total valid inputs
     total_invalid_inputs = false_acceptance + true_rejection  # Total invalid inputs
 
@@ -431,9 +428,9 @@ def main():
                 lower_threshold = float(input("Enter lower threshold value (Recommended value=-1): "))
                 upper_threshold = float(input("Enter upper threshold value (Recommended value=1): "))
                 lower_bound = float(input("Enter lower bound value (Recommended value=-0.1, an integer or float that's "
-                                      "less than zero): "))
+                                          "less than zero): "))
                 upper_bound = float(input("Enter upper bound value (Recommended value=0.1, an integer or float that's "
-                                      "greater than zero): "))
+                                          "greater than zero): "))
                 step_value = float(input("Enter step value (Recommended value=0.02): "))
                 threshold_values = np.arange(lower_bound, upper_bound, step_value)
             percentage_training = 1 - percentage_testing
@@ -468,7 +465,6 @@ def main():
 
             if (percentage_testing is not None and lower_threshold is not None and upper_threshold is not None
                     and lower_bound is not None and upper_bound is not None and step_value is not None):
-
 
                 # start_percent = input("Enter filter start percent in decimal form: ")
                 # end_percent = input("Enter filter end percent in decimal form: ")
@@ -540,7 +536,7 @@ def main():
                     EER_array.append(EER)
                     far_array.append(far)
                     frr_array.append(frr)
-                    ideal_array.append(abs(frr-far)+EER)
+                    ideal_array.append(abs(frr - far) + EER)
                     percent_filter += 0.001
 
                 # Plot the data
@@ -575,7 +571,6 @@ def main():
 
                 pos_frequencies_test, neg_frequencies_test = generate_freq(review_training, review_dict)
 
-
                 combined_testing = np.concatenate((pos_testing, neg_testing), axis=0)
 
                 all_frequencies_test = []
@@ -600,7 +595,6 @@ def main():
                 mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
                 filtered_mask, set_to_zero_index = calculate_filter(mask, percent_filter)
 
-
                 masked_neg = filtered_mask * neg_frequencies_test
                 masked_pos = filtered_mask * pos_frequencies_test
                 combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
@@ -609,8 +603,8 @@ def main():
                 actual_labels = create_actual_labels(combined_testing[:, 0])
 
                 mid_threshold = calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold,
-                                                                                        lower_threshold,
-                                                                                        actual_labels)
+                                                                lower_threshold,
+                                                                actual_labels)
                 threshold_matrix = np.arange(mid_threshold - 0.5, mid_threshold + 0.5, 0.002).reshape(-1, 1)
 
                 far, frr = best_threshold(actual_labels, pos_cosine, neg_cosine, mid_threshold)
