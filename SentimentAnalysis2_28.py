@@ -13,10 +13,11 @@ import matplotlib.pyplot as plt
 from tabulate import tabulate
 
 # Internal imports
-from files import cloud_maker, dictionary_maker, ngram_maker, csv_tasks, commands
+from files import dictionary_maker, ngram_maker, csv_tasks, commands
 
-DATA_PATH = "data/reviews/review_data.csv"
-DICTIONARY_PATH = "data/dictionaries/unigram_dict(review).csv"
+DATA_PATH = "data/reviews/empty_removed_clean_review_data.csv"
+UNI_DICTIONARY_PATH = "data/dictionaries/clean_unigram.csv"
+BI_DICTIONARY_PATH = "data/dictionaries/unique_bigrams.csv"
 PERCENTAGE_TESTING = 0.1
 PERCENTAGE_TRAINING = 1 - PERCENTAGE_TESTING
 INITIAL_PERCENT_FILTER = 0.2
@@ -28,6 +29,7 @@ DEFAULT_PARAMETERS = {
     "lower_bound": -0.1,
     "upper_bound": 0.1,
     "step_value": 0.02,
+    "gram": "B",
 }
 
 
@@ -38,6 +40,7 @@ def main():
     lower_bound = DEFAULT_PARAMETERS["lower_bound"]
     upper_bound = DEFAULT_PARAMETERS["upper_bound"]
     step_value = DEFAULT_PARAMETERS["step_value"]
+    gram = DEFAULT_PARAMETERS["gram"]
 
     # Other variables
     pos_frequencies_train = None
@@ -50,9 +53,14 @@ def main():
     report = None
 
     # Load data
-    reviews_matrix, dictionary = csv_tasks.load_data(DATA_PATH, DICTIONARY_PATH)
-
+    if gram == "U":
+        reviews_matrix, dictionary = csv_tasks.load_data(DATA_PATH, UNI_DICTIONARY_PATH)
+    elif gram == "B":
+        reviews_matrix, dictionary = csv_tasks.load_data(DATA_PATH, BI_DICTIONARY_PATH)
+    else:
+        print("Error with gram selection")
     print("System start up... Default hyperparameters set...")
+
 
     while True:
         # Store hyperparameters in a list of tuples
@@ -63,7 +71,8 @@ def main():
             ("Upper threshold value", upper_threshold),
             ("Lower bound value", lower_bound),
             ("Upper bound value", upper_bound),
-            ("Step value", step_value)
+            ("Step value", step_value),
+            ("Gram value", gram)
         ]
 
         print("Press 'H' for a list of commands.")
@@ -73,20 +82,28 @@ def main():
             commands.print_commands()
 
         elif command == "F":
-            report = commands.execute_filtered_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING)
+            report = commands.execute_filtered_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram)
 
         elif command == 'M':
-            report = commands.execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING)
+            report = commands.execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram)
+
+        elif command == 'B':
+            report = commands.execute_uni_bi_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram)
+
+
+        elif command == 'A':
+            report = commands.execute_filtered_squash_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram)
 
         elif command == 'I':
             # Update hyperparameters
-            lower_threshold, upper_threshold, lower_bound, upper_bound, step_value, commands.threshold_values = update_hyperparameters()
+            # lower_threshold, upper_threshold, lower_bound, upper_bound, step_value, commands.threshold_values = update_hyperparameters()
+            print("Error in Parameter updating")
 
         elif command == 'P':
-            commands.print_data(hyperparameters, dictionary, pos_frequencies_train, neg_frequencies_train,
-                                pos_frequencies_test, neg_frequencies_test, lower_threshold, upper_threshold,
-                                EER, thresholds, confusion_matrices, report)
-
+            # commands.print_data(hyperparameters, dictionary, pos_frequencies_train, neg_frequencies_train,
+            #                     pos_frequencies_test, neg_frequencies_test, lower_threshold, upper_threshold,
+            #                     EER, thresholds, confusion_matrices, report)
+            print("must redo p")
         elif command == 'E':
             print("Program terminated.")
             break

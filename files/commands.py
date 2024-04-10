@@ -10,50 +10,93 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tabulate import tabulate
+import re
 
 
-def generate_freq(review, review_dict):
+def calculate_metrics(actual_labels, positive_scores, negative_scores, threshold):
+    # calculate predicted label and scores
+    predicted_labels, calc_scores = label_classifier(positive_scores, negative_scores, threshold)
+    # calculate the Confusion Matrix
+    cm = metrics.confusion_matrix(actual_labels, predicted_labels)
+    cm = rotate_2x2(cm)
+    Uar = calculate_performance_matrix(cm, 0)
+    fpr, fnr = calculate_fpr_fnr(cm)
+    EER = (fpr + fnr) / 2
+
+    return predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar
+
+
+def generate_freq(review, review_dict, gram):
     """
     Generate frequencies of words in positive and negative reviews.
 
     :param review: numpy array containing review data
     :param review_dict: dictionary containing word frequencies
+    :param gram: U or B for Unigram or Bigram selection
     :return: tuple containing positive and negative word frequencies
     """
     neg_testing = review[review[:, 0] < 3]
     pos_testing = review[review[:, 0] > 3]
 
-    pos_frequencies_test = generate_bag_of_words_frequencies(review_dict, pos_testing[:, 1])
+    pos_frequencies_test = generate_bag_of_words_frequencies(review_dict, pos_testing[:, 1], gram)
     pos_frequencies_test = np.array(pos_frequencies_test)
     pos_frequencies_test = pos_frequencies_test.reshape(-1, 1)
 
-    neg_frequencies_test = generate_bag_of_words_frequencies(review_dict, neg_testing[:, 1])
+    neg_frequencies_test = generate_bag_of_words_frequencies(review_dict, neg_testing[:, 1], gram)
     neg_frequencies_test = np.array(neg_frequencies_test)
     neg_frequencies_test = neg_frequencies_test.reshape(-1, 1)
     return pos_frequencies_test, neg_frequencies_test
 
 
-def generate_bag_of_words_frequencies(dictionary, reviews):
+def generate_bigrams(text):
+
+    words = text.split()
+    bigrams = []
+    for i in range(len(words) - 1):
+        bigram = ' '.join([words[i], words[i + 1]])
+        bigrams.append(bigram)
+    return bigrams
+
+
+def generate_bag_of_words_frequencies(dictionary, reviews, gram):
     """
     Generate bag of words frequencies from reviews.
 
     :param dictionary: dictionary containing word frequencies
     :param reviews: list of reviews
+    :param gram: U or B for Unigram or Bigram selection
     :return: list of bag of words frequencies
     """
     dictionary_mapping = {word: index for index, word in enumerate(dictionary)}
     bag_words = np.zeros(len(dictionary))
     total_words = 0
-    for review_text in reviews:
-        if isinstance(review_text, str) and review_text.lower() != 'nan':
-            words = review_text.split()  # Split review text into words
-            cleaned_words = [word.lower().strip(string.punctuation) for word in words]
-            for word in cleaned_words:
-                index = dictionary_mapping.get(word)
-                if index is not None:
-                    total_words += 1
-                    bag_words[index] += 1
-    return [(word_count / total_words) for word_count in bag_words] if total_words > 0 else np.zeros(len(dictionary))
+    if gram == "U":
+        for review_text in reviews:
+            if isinstance(review_text, str) and review_text.lower() != 'nan':
+                words = review_text.split()  # Split review text into words
+                cleaned_words = [word.lower().strip(string.punctuation) for word in words]
+                for word in cleaned_words:
+                    index = dictionary_mapping.get(word)
+                    if index is not None:
+                        total_words += 1
+                        bag_words[index] += 1
+        return [(word_count / total_words) for word_count in bag_words] if total_words > 0 else np.zeros(
+            len(dictionary))
+    elif gram == "B":
+        for review_text_temp in reviews:
+            if isinstance(review_text_temp, str) and review_text_temp.lower() != 'nan':
+                review_text_clean = review_text_temp.lower()
+                review_text_clean = re.sub(r'\b\d+\b', '', review_text_clean)
+                review_text_clean = re.sub(r'[^\w\s]', '', review_text_clean)
+                words = generate_bigrams(review_text_clean)
+                cleaned_words = [word.lower().strip(string.punctuation) for word in words]
+                for word in cleaned_words:
+                    index = dictionary_mapping.get(word)
+                    if index is not None:
+                        total_words += 1
+                        bag_words[index] += 1
+
+        return [(word_count / total_words) for word_count in bag_words] if total_words > 0 else np.zeros(len(dictionary))
 
 
 def cosine_similarity_scores(all_frequencies):
@@ -287,7 +330,7 @@ def calculate_filter(mask_temp, percent_filter):
 
     :param mask_temp: temporary mask
     :param percent_filter: percentage filter
-    :return: tuple containing filtered mask and number of elements set to zero
+    :return: tuple containing filtered mask
     """
     num_elements_to_zero = int(len(mask_temp) * percent_filter)
     # Sort the array and find the threshold value
@@ -295,7 +338,11 @@ def calculate_filter(mask_temp, percent_filter):
     filter_threshold = sorted_values[num_elements_to_zero]
     # Set elements less than the threshold to zero
     mask_temp[mask_temp < filter_threshold] = 0
-    return mask_temp, num_elements_to_zero
+    return mask_temp
+
+
+def squash(mask, n):
+    return np.power(mask, n)
 
 
 def calculate_EER(fpr, fnr):
@@ -453,6 +500,15 @@ def best_threshold(actual_labels, pos_cosine, neg_cosine, mid_threshold):
     frr = false_rejection / total_valid_inputs
     return far, frr
 
+def print_best_threshold(cm, EER, FPR, FNR, UAR, threshold):
+    print("The Threshold Used:", threshold)
+    print(f"Best Possible Confusion Matrix:\n{cm}")
+    print("Best Possible FPR: ", FPR)
+    print("Best Possible FNR: ", FNR)
+    print("Best Possible Equal Error Rate: ", EER)
+    print("Best Possible Unweighted Accuracy: ", UAR)
+
+
 
 def rotate_2x2(matrix):
     """
@@ -563,7 +619,7 @@ def print_data(hyperparameters, dictionary, pos_frequencies_train, neg_frequenci
         print(report)
 
 
-def execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING):
+def execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram):
     print("Executing main function...")
     percentage_testing = PERCENTAGE_TESTING
 
@@ -574,11 +630,9 @@ def execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, P
                                                        random_state=42)
     neg_testing = review_testing[review_testing[:, 0] < 3]
     pos_testing = review_testing[review_testing[:, 0] > 3]
-
-    pos_frequencies_test, neg_frequencies_test = generate_freq(review_training, dictionary)
-
+    pos_frequencies_test, neg_frequencies_test = generate_freq(review_training, dictionary, gram)
     combined_testing = np.concatenate((pos_testing, neg_testing), axis=0)
-
+    print("this:", pos_frequencies_test.shape)
     all_frequencies_test = []
 
     run_num = 0
@@ -590,7 +644,7 @@ def execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, P
             continue
 
         try:
-            review_freq = generate_bag_of_words_frequencies(dictionary, [review_text])
+            review_freq = generate_bag_of_words_frequencies(dictionary, [review_text], gram)
             # Append review_freq to the list
             all_frequencies_test.append(review_freq)
             print("Run " + str(run_num) + " successful.")
@@ -599,44 +653,140 @@ def execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, P
 
     all_frequencies_test = np.array(all_frequencies_test).T
 
-    percent_filter = 0.23
-
+    percent_filter = 0
+    n = 6.5
     mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
-    filtered_mask, set_to_zero_index = calculate_filter(mask, percent_filter)
 
+    filtered_mask = calculate_filter(mask, percent_filter)
+    filtered_mask = squash(filtered_mask, n)
     masked_neg = filtered_mask * neg_frequencies_test
     masked_pos = filtered_mask * pos_frequencies_test
     combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
     pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
-
+    print(len(pos_cosine))
+    print(all_frequencies_test.shape)
     actual_labels = create_actual_labels(combined_testing[:, 0])
 
     mid_threshold = calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold,
                                                     lower_threshold,
                                                     actual_labels)
-    threshold_matrix = np.arange(mid_threshold - 0.5, mid_threshold + 0.5, 0.002).reshape(-1, 1)
 
-    far, frr = best_threshold(actual_labels, pos_cosine, neg_cosine, mid_threshold)
-    predicted_labels, EER, thresholds, confusion_matrices, uar_matrix, all_fpr, all_fnr = (
-        confusion_matrix_scheduler(actual_labels, pos_cosine, neg_cosine, threshold_matrix))
+    predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar = calculate_metrics(actual_labels, pos_cosine,
+                                                                              neg_cosine, mid_threshold)
+    print_best_threshold(cm, EER, fpr, fnr, Uar, mid_threshold)
     report = statistics(actual_labels, predicted_labels)
-    print("FAR (FPR): ", far)
-    print("FRR (FNR): ", frr)
+
     return report
 
 
-def execute_filtered_main(review_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_THRESHOLD):
-    print("Executing filter function...")
+def execute_uni_bi_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram):
+    print("Executing main function...")
+    percentage_testing = PERCENTAGE_TESTING
 
     sorted_indices = np.argsort(reviews_matrix[0])
     reviews_matrix = reviews_matrix[:, sorted_indices]
 
-    review_training, review_testing = train_test_split(reviews_matrix.T, test_size=PERCENTAGE_TESTING,
+    review_training, review_testing = train_test_split(reviews_matrix.T, test_size=percentage_testing,
+                                                       random_state=42)
+    neg_testing = review_testing[review_testing[:, 0] < 3]
+    pos_testing = review_testing[review_testing[:, 0] > 3]
+    pos_frequencies_test, neg_frequencies_test = generate_freq(review_training, dictionary, gram)
+    combined_testing = np.concatenate((pos_testing, neg_testing), axis=0)
+    print("this:", pos_frequencies_test.shape)
+    all_frequencies_test = []
+
+    run_num = 0
+
+    # for i in range(len(combined_testing)):
+    #     run_num += 1
+    #     review_text = combined_testing[i][1]
+    #     if review_text == "":
+    #         continue
+    #
+    #     try:
+    #         review_freq = generate_bag_of_words_frequencies(dictionary, [review_text], gram)
+    #         # Append review_freq to the list
+    #         all_frequencies_test.append(review_freq)
+    #         print("Run " + str(run_num) + " successful.")
+    #     except Exception as e:
+    #         print("Run " + str(run_num) + " failed. Reason: " + str(e))
+
+    all_frequencies_test = np.array(all_frequencies_test).T
+    # np.savetxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_bi_all_freq.csv', all_frequencies_test, delimiter=",")
+    # np.savetxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_bi_pos.csv', pos_frequencies_test, delimiter=",")
+    # np.savetxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_bi_neg.csv', neg_frequencies_test, delimiter=",")
+
+    i = 0
+    w = 0
+    EER_storage = []
+    w_storage = []
+    while i <= 2:
+        combine_uni_all = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_uni_all_freq.csv', delimiter=",")
+        combine_bi_all = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_bi_all_freq.csv',delimiter=",")
+        combine_uni_pos = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_uni_pos.csv', delimiter=",")
+        combine_bi_pos = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_bi_pos.csv', delimiter=",")
+        combine_uni_neg = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_uni_neg.csv', delimiter=",")
+        combine_bi_neg = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_bi_neg.csv', delimiter=",")
+
+        combine_uni_all = combine_uni_all * (1-w)
+        combine_uni_pos = combine_uni_pos * (1-w)
+        combine_uni_neg = combine_uni_neg * (1-w)
+        combine_bi_all = combine_bi_all * w
+        combine_bi_pos = combine_bi_pos * w
+        combine_bi_neg = combine_bi_neg * w
+
+        merged_all = np.vstack([combine_uni_all, combine_bi_all])
+        merged_pos = np.hstack([combine_uni_pos, combine_bi_pos])
+        merged_neg = np.hstack([combine_uni_neg, combine_bi_neg])
+        all_frequencies_test = merged_all
+        neg_frequencies_test = np.reshape(merged_neg, (-1, 1))
+        pos_frequencies_test = np.reshape(merged_pos, (-1, 1))
+
+
+
+        percent_filter = 0
+        n = 6.5
+        mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
+
+        filtered_mask = calculate_filter(mask, percent_filter)
+        filtered_mask = squash(filtered_mask, n)
+        masked_neg = filtered_mask * neg_frequencies_test
+        masked_pos = filtered_mask * pos_frequencies_test
+        combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
+        pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
+
+        actual_labels = create_actual_labels(combined_testing[:, 0])
+
+        mid_threshold = calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold,
+                                                        lower_threshold,
+                                                        actual_labels)
+
+        predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar = calculate_metrics(actual_labels, pos_cosine,
+                                                                                  neg_cosine, mid_threshold)
+        EER_storage.append(EER)
+        w_storage.append(w)
+        print_best_threshold(cm, EER, fpr, fnr, Uar, mid_threshold)
+        report = statistics(actual_labels, predicted_labels)
+        w = w + 0.5
+        i = i + 1
+    print(EER_storage)
+    print(w_storage)
+    return report
+
+
+
+def execute_filtered_main(review_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_THRESHOLD, gram):
+    print("Executing filter function...")
+
+    sorted_indices = np.argsort(review_matrix[0])
+    reviews_matrix = review_matrix[:, sorted_indices]
+
+    review_training, review_testing = train_test_split(reviews_matrix.T, test_size=PERCENTAGE_THRESHOLD,
                                                        random_state=42)
     neg_testing = review_testing[review_testing[:, 0] < 3]
     pos_testing = review_testing[review_testing[:, 0] > 3]
 
-    pos_frequencies_test, neg_frequencies_test = generate_freq(review_training, dictionary)
+    pos_frequencies_test, neg_frequencies_test = generate_freq(review_training, dictionary, gram)
 
     combined_testing = np.concatenate((pos_testing, neg_testing), axis=0)
 
@@ -651,7 +801,7 @@ def execute_filtered_main(review_matrix, dictionary, upper_threshold, lower_thre
             continue
 
         try:
-            review_freq = generate_bag_of_words_frequencies(dictionary, [review_text])
+            review_freq = generate_bag_of_words_frequencies(dictionary, [review_text], gram)
             # Append review_freq to the list
             all_frequencies_test.append(review_freq)
             print("Run " + str(run_num) + " successful.")
@@ -660,50 +810,40 @@ def execute_filtered_main(review_matrix, dictionary, upper_threshold, lower_thre
 
     all_frequencies_test = np.array(all_frequencies_test).T
 
-    percent_filter = INITIAL_PERCENT_FILTER
-
+    percent_filter = 0.24
+    n = 1.75
     mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
+
     EER_array = []
-    far_array = []
-    frr_array = []
-    ideal_array = []
     percent_filter_array = []
     while percent_filter < 0.4:
         print(percent_filter)
         percent_filter_array.append(percent_filter)
 
-        filtered_mask, set_to_zero_index = calculate_filter(mask, percent_filter)
-
+        filtered_mask = calculate_filter(mask, percent_filter)
+        filtered_mask = squash(filtered_mask, n)
         masked_neg = filtered_mask * neg_frequencies_test
         masked_pos = filtered_mask * pos_frequencies_test
-
         combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
         pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
+
         actual_labels = create_actual_labels(combined_testing[:, 0])
 
         mid_threshold = calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold,
-                                                        lower_threshold, actual_labels)
-        threshold_matrix = np.arange(mid_threshold - 0.5, mid_threshold + 0.5, 0.002).reshape(-1, 1)
+                                                        lower_threshold,
+                                                        actual_labels)
 
-        far, frr = best_threshold(actual_labels, pos_cosine, neg_cosine, mid_threshold)
-        predicted_labels, EER, thresholds, confusion_matrices, uar_matrix, all_fpr, all_fnr = (
-            confusion_matrix_scheduler(actual_labels, pos_cosine, neg_cosine, threshold_matrix))
+        predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar = calculate_metrics(actual_labels, pos_cosine,
+                                                                                  neg_cosine, mid_threshold)
+        print_best_threshold(cm, EER, fpr, fnr, Uar, mid_threshold)
         report = statistics(actual_labels, predicted_labels)
         print("EER: ", EER)
-        print("FAR: ", far)
-        print("FRR: ", frr)
         EER_array.append(EER)
-        far_array.append(far)
-        frr_array.append(frr)
-        ideal_array.append(abs(frr - far) + EER)
-        percent_filter += 0.001
-        return report
+        percent_filter += 0.05
+
 
     # Plot the data
     plt.plot(percent_filter_array, EER_array, label='EER')
-    plt.plot(percent_filter_array, far_array, label='FAR')
-    plt.plot(percent_filter_array, frr_array, label='FRR')
-    plt.plot(percent_filter_array, ideal_array, label='IDEAL')
     # Add labels and title
     plt.xlabel('Percent Filter')
     plt.ylabel('EER')
@@ -714,3 +854,130 @@ def execute_filtered_main(review_matrix, dictionary, upper_threshold, lower_thre
 
     # Show the plot
     plt.show()
+
+    return report
+
+
+def execute_filtered_squash_main(review_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_THRESHOLD, gram):
+    print("Executing filter function...")
+
+    sorted_indices = np.argsort(review_matrix[0])
+    reviews_matrix = review_matrix[:, sorted_indices]
+
+    review_training, review_testing = train_test_split(reviews_matrix.T, test_size=PERCENTAGE_THRESHOLD,
+                                                       random_state=42)
+    neg_testing = review_testing[review_testing[:, 0] < 3]
+    pos_testing = review_testing[review_testing[:, 0] > 3]
+
+    pos_frequencies_test, neg_frequencies_test = generate_freq(review_training, dictionary, gram)
+
+    combined_testing = np.concatenate((pos_testing, neg_testing), axis=0)
+
+    all_frequencies_test = []
+
+    run_num = 0
+
+    for i in range(len(combined_testing)):
+        run_num += 1
+        review_text = combined_testing[i][1]
+        if review_text == "":
+            continue
+
+        try:
+            review_freq = generate_bag_of_words_frequencies(dictionary, [review_text], gram)
+            # Append review_freq to the list
+            all_frequencies_test.append(review_freq)
+            print("Run " + str(run_num) + " successful.")
+        except Exception as e:
+            print("Run " + str(run_num) + " failed. Reason: " + str(e))
+
+    all_frequencies_test = np.array(all_frequencies_test).T
+
+    actual_labels = create_actual_labels(combined_testing[:, 0])
+    EER_array = []
+    percent_filter_array = []
+    n_array = []
+    neg_zero_count_array = []
+    pos_zero_count_array = []
+    pf_limit = 0.5
+    pf_ground = 0
+    pf_increase = 0.01
+    n_limit = 15
+    n_ground = 0
+    n_increase = 0.25
+    total_iterations = round(
+        ((n_limit - n_ground + n_increase) / n_increase) * ((pf_limit - pf_ground + pf_increase) / pf_increase))
+    status_count = 0
+    percent_filter = pf_ground
+
+    while percent_filter <= pf_limit:
+        n = n_ground
+
+        while n <= n_limit:
+            n_array.append(n)
+            percent_filter_array.append(percent_filter)
+            mask = calculate_mask(neg_frequencies_test, pos_frequencies_test)
+            filtered_mask = calculate_filter(mask, percent_filter)
+            filtered_mask = squash(filtered_mask, n)
+            masked_neg = filtered_mask * neg_frequencies_test
+            masked_pos = filtered_mask * pos_frequencies_test
+
+            combined_matrix = np.concatenate((masked_pos, masked_neg, all_frequencies_test), axis=1)
+            pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
+
+            best_threshold = calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold,
+                                                                                               lower_threshold,
+                                                                                               actual_labels)
+
+            predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar = calculate_metrics(actual_labels,
+                                                                                      pos_cosine,
+                                                                                      neg_cosine,
+                                                                                      best_threshold)
+            print_best_threshold(cm, EER, fpr, fnr, Uar, best_threshold)
+
+            report = statistics(actual_labels, predicted_labels)
+
+            EER_array.append(EER)
+            neg_zero_count_array.append(np.count_nonzero(masked_neg == 0))
+            pos_zero_count_array.append(np.count_nonzero(masked_pos == 0))
+            status_count += 1
+            percent_complete = (status_count / total_iterations) * 100
+
+            print(f'\r{status_count}/{total_iterations}  ({percent_complete:.2f}%)', end='', flush=True)
+
+            n += n_increase
+
+        percent_filter += pf_increase
+
+    print("\nWriting to CSV...")
+
+    # Define the file name
+    file_name = r'C:\Users\gdstren\Sentiment Graphs\Conference\data.csv'
+
+    if gram == "U":
+        # Write data to CSV file
+        with open(file_name, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Percent_Filter', 'N', 'uni_EER'])  # Write header
+            for i in range(len(percent_filter_array)):
+                writer.writerow([percent_filter_array[i], n_array[i], EER_array[i]])
+
+    elif gram == "B":
+        # Read existing data from CSV file
+        data = []
+        with open(file_name, 'r') as file:
+            reader = csv.reader(file)
+            header = next(reader)
+            data = [row for row in reader]
+
+        # Add new column values
+        for i, row in enumerate(data):
+            row.append(EER_array[i])
+
+        # Rewrite the CSV file with the updated data
+        with open(file_name, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(header + ['bi_EER'])
+            writer.writerows(data)
+
+    return report
