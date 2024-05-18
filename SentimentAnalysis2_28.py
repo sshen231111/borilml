@@ -1,4 +1,4 @@
- # External imports
+# External imports
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report, det_curve, DetCurveDisplay, recall_score
@@ -61,7 +61,6 @@ def main():
         print("Error with gram selection")
     print("System start up... Default hyperparameters set...")
 
-
     while True:
         # Store hyperparameters in a list of tuples
         hyperparameters = [
@@ -82,17 +81,21 @@ def main():
             commands.print_commands()
 
         elif command == "F":
-            report = commands.execute_filtered_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram)
+            report = commands.execute_filtered_main(reviews_matrix, dictionary, upper_threshold, lower_threshold,
+                                                    PERCENTAGE_TESTING, gram)
 
         elif command == 'M':
-            report = commands.execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram)
+            report = commands.execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold,
+                                           PERCENTAGE_TESTING, gram)
 
         elif command == 'B':
-            report = commands.execute_uni_bi_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram)
+            report = commands.execute_uni_bi_main(reviews_matrix, dictionary, upper_threshold, lower_threshold,
+                                                  PERCENTAGE_TESTING, gram)
 
 
         elif command == 'A':
-            report = commands.execute_filtered_squash_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram)
+            report = commands.execute_filtered_squash_main(reviews_matrix, dictionary, upper_threshold, lower_threshold,
+                                                           PERCENTAGE_TESTING, gram)
 
         elif command == 'I':
             # Update hyperparameters

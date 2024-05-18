@@ -14,6 +14,16 @@ from tabulate import tabulate
 
 
 def generate_freq(review, review_dict):
+    """
+    Generate frequency of positive and negative reviews.
+
+    Parameters:
+    review (numpy.ndarray): The review data.
+    review_dict (dict): The review dictionary.
+
+    Returns:
+    tuple: A tuple containing frequencies of positive and negative reviews.
+    """
     neg_testing = review[review[:, 0] < 3]
     pos_testing = review[review[:, 0] > 3]
 
@@ -28,6 +38,16 @@ def generate_freq(review, review_dict):
 
 
 def generate_bag_of_words_frequencies(dictionary, reviews):
+    """
+    Generate bag of words frequencies for given reviews.
+
+    Parameters:
+    dictionary (dict): The dictionary of words.
+    reviews (list): The list of reviews.
+
+    Returns:
+    list: A list of word frequencies.
+    """
     dictionary_mapping = {word: index for index, word in enumerate(dictionary)}
     bag_words = np.zeros(len(dictionary))
     total_words = 0
@@ -44,6 +64,15 @@ def generate_bag_of_words_frequencies(dictionary, reviews):
 
 
 def cosine_similarity_scores(all_frequencies):
+    """
+    Calculate cosine similarity scores for all frequencies.
+
+    Parameters:
+    all_frequencies (numpy.ndarray): The frequency data.
+
+    Returns:
+    tuple: A tuple containing lists of positive and negative similarities.
+    """
     positive_column = all_frequencies[:, 0].reshape(1, -1)
     negative_column = all_frequencies[:, 1].reshape(1, -1)
     pos_similarities = []
@@ -58,12 +87,34 @@ def cosine_similarity_scores(all_frequencies):
 
 
 def classify_labels(positive_scores, negative_scores, threshold):
+    """
+    Classify labels based on positive scores, negative scores, and a threshold.
+
+    Parameters:
+    positive_scores (list): The list of positive scores.
+    negative_scores (list): The list of negative scores.
+    threshold (float): The threshold value for classification.
+
+    Returns:
+    tuple: A tuple containing labels and scores.
+    """
     labels = np.where((positive_scores - negative_scores - threshold) <= 0, 0, 1)
     scores = positive_scores - negative_scores
     return labels, scores
 
 
 def label_classifier(pscore, nscore, threshold):
+    """
+    Classify labels based on positive scores, negative scores, and a threshold.
+
+    Parameters:
+    pscore (list): The list of positive scores.
+    nscore (list): The list of negative scores.
+    threshold (float): The threshold value for classification.
+
+    Returns:
+    tuple: A tuple containing labels and scores.
+    """
     label = np.zeros(len(pscore), dtype=int)
     scores = np.zeros(len(pscore), dtype=float)
     # assigns labels as Positive(1) or Negative(0)
@@ -79,6 +130,16 @@ def label_classifier(pscore, nscore, threshold):
 
 
 def calculate_performance_matrix(inputdata, flag):
+    """
+    Calculate performance matrix for given input data.
+
+    Parameters:
+    inputdata (numpy.ndarray): The input data.
+    flag (int): The flag to indicate whether to print the results.
+
+    Returns:
+    float: The unweighted accuracy.
+    """
     class_accuracy_matrix = np.empty(len(inputdata))
     for i in range(len(inputdata)):
         class_accuracy = (inputdata[i, i] / (np.sum(inputdata[i, :]))) * 100
@@ -111,6 +172,13 @@ def calculate_performance_matrix(inputdata, flag):
 
 
 def calculate_det(fpr, fnr):
+    """
+    Calculate and plot the Detection Error Tradeoff (DET) curve.
+
+    Parameters:
+    fpr (list): The list of false positive rates.
+    fnr (list): The list of false negative rates.
+    """
     display = DetCurveDisplay(fpr=fpr, fnr=fnr, estimator_name="DET Curve")
     display.plot()
     plt.xlabel('False Positive Rate (FPR)')
@@ -120,6 +188,16 @@ def calculate_det(fpr, fnr):
 
 
 def count_correct_predictions(actual_labels, predicted_labels):
+    """
+    Count the number of correct and wrong predictions.
+
+    Parameters:
+    actual_labels (list): The list of actual labels.
+    predicted_labels (list): The list of predicted labels.
+
+    Returns:
+    tuple: A tuple containing counts of correct and wrong predictions.
+    """
     correct_count = 0
     wrong_count = 0
     for actual, predicted in zip(actual_labels, predicted_labels):
@@ -131,6 +209,18 @@ def count_correct_predictions(actual_labels, predicted_labels):
 
 
 def confusion_matrix_scheduler(actual_labels, positive_scores, negative_scores, thresholds):
+    """
+    Schedule the calculation of confusion matrix for given labels, scores, and thresholds.
+
+    Parameters:
+    actual_labels (list): The list of actual labels.
+    positive_scores (list): The list of positive scores.
+    negative_scores (list): The list of negative scores.
+    thresholds (list): The list of thresholds.
+
+    Returns:
+    tuple: A tuple containing predicted labels, equal error rate, thresholds, confusion matrices, unweighted accuracy matrix, false positive rates, and false negative rates.
+    """
     uar_matrix = []
     confusion_matrices = []  # Initialize an empty list to store confusion matrices
 
@@ -156,6 +246,15 @@ def confusion_matrix_scheduler(actual_labels, positive_scores, negative_scores, 
 
 
 def find_max(list_of_values):
+    """
+    Find the maximum value in a list and its index.
+
+    Parameters:
+    list_of_values (list): The list of values.
+
+    Returns:
+    int: The index of the maximum value.
+    """
     max_value = max(list_of_values)
     max_index = list_of_values.index(max_value)
 
@@ -163,6 +262,13 @@ def find_max(list_of_values):
 
 
 def plot_threshold_vs_accuracy(threshold_values, uar_values):
+    """
+    Plot threshold values versus unweighted accuracy.
+
+    Parameters:
+    threshold_values (list): The list of threshold values.
+    uar_values (list): The list of unweighted accuracy values.
+    """
     # Plotting the threshold_matrix(x axis) vs unweighted accuracy (UAR)
     plt.figure(figsize=(8, 5))
     plt.plot(threshold_values, uar_values, marker='o', linestyle='-')
@@ -174,6 +280,16 @@ def plot_threshold_vs_accuracy(threshold_values, uar_values):
 
 
 def statistics(actual_labels, predicted_labels):
+    """
+    Generate a classification report for actual and predicted labels.
+
+    Parameters:
+    actual_labels (list): The list of actual labels.
+    predicted_labels (list): The list of predicted labels.
+
+    Returns:
+    str: The classification report.
+    """
     # Generate a classification report
     report = classification_report(actual_labels, predicted_labels, zero_division=1)
     return report
@@ -181,6 +297,16 @@ def statistics(actual_labels, predicted_labels):
 
 # Calculates the weight mask and returns it
 def calculate_mask(negative_freq, positive_freq):
+    """
+    Calculate the weight mask for negative and positive frequencies.
+
+    Parameters:
+    negative_freq (numpy.ndarray): The negative frequencies.
+    positive_freq (numpy.ndarray): The positive frequencies.
+
+    Returns:
+    numpy.ndarray: The weight mask.
+    """
     delta = abs(positive_freq - negative_freq)
     summation = negative_freq + positive_freq
     modified_array = np.where(summation == 0, 1, summation)
@@ -189,6 +315,16 @@ def calculate_mask(negative_freq, positive_freq):
 
 
 def calculate_filter(mask_temp, percent_filter):
+    """
+    Calculate the filter for a mask.
+
+    Parameters:
+    mask_temp (numpy.ndarray): The mask.
+    percent_filter (float): The percentage of elements to filter.
+
+    Returns:
+    tuple: A tuple containing the filtered mask and the number of elements set to zero.
+    """
     num_elements_to_zero = int(len(mask_temp) * percent_filter)
     # Sort the array and find the threshold value
     sorted_values = np.sort(mask_temp, axis=0)
@@ -199,6 +335,16 @@ def calculate_filter(mask_temp, percent_filter):
 
 
 def calculate_EER(fpr, fnr):
+    """
+    Calculate the Equal Error Rate (EER).
+
+    Parameters:
+    fpr (list): The list of false positive rates.
+    fnr (list): The list of false negative rates.
+
+    Returns:
+    float: The best equal error rate.
+    """
     EER_Matrix = np.empty(len(fpr))
     for i in range(len(fpr)):
         eer = (fpr[i] + fnr[i]) / 2.0
@@ -208,6 +354,19 @@ def calculate_EER(fpr, fnr):
 
 
 def calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold, lower_threshold, actual_labels):
+    """
+    Calculate the threshold using the bisectional method.
+
+    Parameters:
+    pos_cosine (list): The list of positive cosine values.
+    neg_cosine (list): The list of negative cosine values.
+    upper_threshold (float): The upper threshold value.
+    lower_threshold (float): The lower threshold value.
+    actual_labels (list): The list of actual labels.
+
+    Returns:
+    float: The calculated threshold.
+    """
     count = 0
 
     mid_threshold = (upper_threshold + lower_threshold) / 2
@@ -246,6 +405,17 @@ def calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold, low
 
 
 def binary_search(low, mid, high):
+    """
+    Perform a binary search between low, mid, and high values.
+
+    Parameters:
+    low (float): The low value.
+    mid (float): The mid value.
+    high (float): The high value.
+
+    Returns:
+    tuple: A tuple containing the two closest values.
+    """
     if abs(low - mid) < abs(high - mid):
         return low, mid
     else:
@@ -253,6 +423,15 @@ def binary_search(low, mid, high):
 
 
 def create_actual_labels(ratings):
+    """
+    Create actual labels based on ratings.
+
+    Parameters:
+    ratings (list): The list of ratings.
+
+    Returns:
+    list: The list of actual labels.
+    """
     actual_labels = []
     for rating in ratings:
         if rating > 3:
@@ -263,6 +442,15 @@ def create_actual_labels(ratings):
 
 
 def calculate_fpr_fnr(confusion_matrix_array):
+    """
+    Calculate the false positive rate and false negative rate from a confusion matrix.
+
+    Parameters:
+    confusion_matrix_array (numpy.ndarray): The confusion matrix.
+
+    Returns:
+    tuple: A tuple containing the false positive rate and false negative rate.
+    """
     # Extract values from confusion matrix
     TN, FP, FN, TP = confusion_matrix_array.ravel()
     # Calculate False Positive Rate (FPR)
@@ -279,6 +467,18 @@ def calculate_fpr_fnr(confusion_matrix_array):
 
 
 def best_threshold(actual_labels, pos_cosine, neg_cosine, mid_threshold):
+    """
+    Calculate the best threshold for classification.
+
+    Parameters:
+    actual_labels (list): The list of actual labels.
+    pos_cosine (list): The list of positive cosine values.
+    neg_cosine (list): The list of negative cosine values.
+    mid_threshold (float): The mid threshold value.
+
+    Returns:
+    tuple: A tuple containing the false acceptance rate and false rejection rate.
+    """
     predicted_labels, calc_scores = label_classifier(pos_cosine, neg_cosine, mid_threshold)
     # calculate the Confusion Matrix
     cm = metrics.confusion_matrix(actual_labels, predicted_labels)
@@ -309,6 +509,15 @@ def best_threshold(actual_labels, pos_cosine, neg_cosine, mid_threshold):
 
 
 def rotate_2x2(matrix):
+    """
+    Rotate a 2x2 matrix by swapping elements diagonally.
+
+    Parameters:
+    matrix (numpy.ndarray): The 2x2 matrix.
+
+    Returns:
+    numpy.ndarray: The rotated matrix.
+    """
     # Swap elements diagonally
     rotated_matrix = np.array([[matrix[1][1], matrix[1][0]],
                                [matrix[0][1], matrix[0][0]]])

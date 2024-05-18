@@ -5,6 +5,15 @@ from nltk import ngrams
 
 # Function to tokenize text into words without numbers and special characters
 def tokenize(text):
+    """
+    Tokenize text into words without numbers and special characters.
+
+    Parameters:
+    text (str): The text to be tokenized.
+
+    Returns:
+    list: A list of words.
+    """
     # Use regular expression to find words without numbers and special characters
     words = re.findall(r'\b[a-zA-Z]+\b', text.lower())
     return words
@@ -12,6 +21,15 @@ def tokenize(text):
 
 # Function to generate all possible bigrams from a list of words
 def generate_bigrams(words):
+    """
+    Generate all possible bigrams from a list of words.
+
+    Parameters:
+    words (list): The list of words.
+
+    Returns:
+    list: A list of bigrams.
+    """
     return [' '.join(bigram) for bigram in ngrams(words, 2)]
 
 
@@ -20,6 +38,15 @@ bigram_set = set()
 
 
 def clean_string(text):
+    """
+    Clean a string by converting to lowercase and removing numbers and punctuation.
+
+    Parameters:
+    text (str): The text to be cleaned.
+
+    Returns:
+    str: The cleaned text.
+    """
     # Lowercase the string
     text = text.lower()
     # Remove numbers and punctuation

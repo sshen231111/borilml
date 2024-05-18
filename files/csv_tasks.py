@@ -21,16 +21,48 @@ def save_to_csv(array, file_name):
 
 
 def load_csv_column(csv_file, column_index, first_row_header=False):
+    """
+    Load a specific column from a CSV file.
+
+    Parameters:
+    csv_file (str): Path to the CSV file.
+    column_index (int): Index of the column to load.
+    first_row_header (bool): Whether the first row of the CSV file is a header.
+
+    Returns:
+    pandas.Series: The specified column from the CSV file.
+    """
     df = pd.read_csv(csv_file, header=None if not first_row_header else 'infer')
     return df.iloc[:, column_index]
 
 
 def load_csv_row(csv_file, row_index, first_row_header=False):
+    """
+    Load a specific row from a CSV file.
+
+    Parameters:
+    csv_file (str): Path to the CSV file.
+    row_index (int): Index of the row to load.
+    first_row_header (bool): Whether the first row of the CSV file is a header.
+
+    Returns:
+    pandas.Series: The specified row from the CSV file.
+    """
     df = pd.read_csv(csv_file, header=None if not first_row_header else 'infer')
     return df.iloc[row_index]
 
 
 def load_data(data_path, dictionary_path):
+    """
+    Load review matrix and dictionary from specified paths.
+
+    Parameters:
+    data_path (str): Path to the data file.
+    dictionary_path (str): Path to the dictionary file.
+
+    Returns:
+    tuple: The review matrix and dictionary.
+    """
     reviews_matrix = pd.read_csv(data_path).to_numpy().T
     review_dict = load_csv_row(dictionary_path, 0, first_row_header=False)
     sorted_indices = np.argsort(reviews_matrix[0])

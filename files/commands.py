@@ -49,7 +49,6 @@ def generate_freq(review, review_dict, gram):
 
 
 def generate_bigrams(text):
-
     words = text.split()
     bigrams = []
     for i in range(len(words) - 1):
@@ -96,7 +95,8 @@ def generate_bag_of_words_frequencies(dictionary, reviews, gram):
                         total_words += 1
                         bag_words[index] += 1
 
-        return [(word_count / total_words) for word_count in bag_words] if total_words > 0 else np.zeros(len(dictionary))
+        return [(word_count / total_words) for word_count in bag_words] if total_words > 0 else np.zeros(
+            len(dictionary))
 
 
 def cosine_similarity_scores(all_frequencies):
@@ -500,6 +500,7 @@ def best_threshold(actual_labels, pos_cosine, neg_cosine, mid_threshold):
     frr = false_rejection / total_valid_inputs
     return far, frr
 
+
 def print_best_threshold(cm, EER, FPR, FNR, UAR, threshold):
     print("The Threshold Used:", threshold)
     print(f"Best Possible Confusion Matrix:\n{cm}")
@@ -507,7 +508,6 @@ def print_best_threshold(cm, EER, FPR, FNR, UAR, threshold):
     print("Best Possible FNR: ", FNR)
     print("Best Possible Equal Error Rate: ", EER)
     print("Best Possible Unweighted Accuracy: ", UAR)
-
 
 
 def rotate_2x2(matrix):
@@ -525,6 +525,9 @@ def rotate_2x2(matrix):
 
 
 def print_commands():
+    """
+    Print the available commands to the console.
+    """
     print("Commands:")
     print("M - Main function of the program")
     print("G - Graph generation")
@@ -535,6 +538,12 @@ def print_commands():
 
 
 def update_hyperparameters():
+    """
+    Update the hyperparameters based on user input.
+
+    Returns:
+    tuple: A tuple containing the updated hyperparameters.
+    """
     print("Setting hyperparameters...")
 
     lower_threshold = float(input("Enter lower threshold value (Recommended value=-1): "))
@@ -553,6 +562,24 @@ def update_hyperparameters():
 # Define the function for printing data
 def print_data(hyperparameters, dictionary, pos_frequencies_train, neg_frequencies_train, pos_frequencies_test,
                neg_frequencies_test, lower_threshold, upper_threshold, EER, thresholds, confusion_matrices, report):
+    """
+    Print various data including hyperparameters, dictionary length, bag-of-words frequencies, threshold values,
+    equal error rate, peak results, and classification report.
+
+    Parameters:
+    hyperparameters (dict): The current hyperparameters.
+    dictionary (dict): The current dictionary.
+    pos_frequencies_train (list): The positive frequencies for the training data.
+    neg_frequencies_train (list): The negative frequencies for the training data.
+    pos_frequencies_test (list): The positive frequencies for the testing data.
+    neg_frequencies_test (list): The negative frequencies for the testing data.
+    lower_threshold (float): The lower threshold value.
+    upper_threshold (float): The upper threshold value.
+    EER (float): The equal error rate.
+    thresholds (list): The list of threshold values.
+    confusion_matrices (list): The list of confusion matrices.
+    report (str): The classification report.
+    """
     print("Printing data...\n")
 
     # Print the hyperparameters
@@ -620,6 +647,20 @@ def print_data(hyperparameters, dictionary, pos_frequencies_train, neg_frequenci
 
 
 def execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram):
+    """
+    Execute the main function of the program.
+
+    Parameters:
+    reviews_matrix (numpy.array): The reviews matrix.
+    dictionary (dict): The current dictionary.
+    upper_threshold (float): The upper threshold value.
+    lower_threshold (float): The lower threshold value.
+    PERCENTAGE_TESTING (float): The percentage of data to be used for testing.
+    gram (str): 'U' or 'B' for Unigram or Bigram selection.
+
+    Returns:
+    str: The classification report.
+    """
     print("Executing main function...")
     percentage_testing = PERCENTAGE_TESTING
 
@@ -680,6 +721,20 @@ def execute_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, P
 
 
 def execute_uni_bi_main(reviews_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_TESTING, gram):
+    """
+    Execute the main function of the program for both unigram and bigram.
+
+    Parameters:
+    reviews_matrix (numpy.array): The reviews matrix.
+    dictionary (dict): The current dictionary.
+    upper_threshold (float): The upper threshold value.
+    lower_threshold (float): The lower threshold value.
+    PERCENTAGE_TESTING (float): The percentage of data to be used for testing.
+    gram (str): 'U' or 'B' for Unigram or Bigram selection.
+
+    Returns:
+    str: The classification report.
+    """
     print("Executing main function...")
     percentage_testing = PERCENTAGE_TESTING
 
@@ -721,16 +776,18 @@ def execute_uni_bi_main(reviews_matrix, dictionary, upper_threshold, lower_thres
     EER_storage = []
     w_storage = []
     while i <= 2:
-        combine_uni_all = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_uni_all_freq.csv', delimiter=",")
-        combine_bi_all = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_bi_all_freq.csv',delimiter=",")
+        combine_uni_all = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_uni_all_freq.csv',
+                                     delimiter=",")
+        combine_bi_all = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_bi_all_freq.csv',
+                                    delimiter=",")
         combine_uni_pos = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_uni_pos.csv', delimiter=",")
         combine_bi_pos = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_bi_pos.csv', delimiter=",")
         combine_uni_neg = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_uni_neg.csv', delimiter=",")
         combine_bi_neg = np.loadtxt(r'C:\Users\gdstren\Sentiment Graphs\Conference\combine_bi_neg.csv', delimiter=",")
 
-        combine_uni_all = combine_uni_all * (1-w)
-        combine_uni_pos = combine_uni_pos * (1-w)
-        combine_uni_neg = combine_uni_neg * (1-w)
+        combine_uni_all = combine_uni_all * (1 - w)
+        combine_uni_pos = combine_uni_pos * (1 - w)
+        combine_uni_neg = combine_uni_neg * (1 - w)
         combine_bi_all = combine_bi_all * w
         combine_bi_pos = combine_bi_pos * w
         combine_bi_neg = combine_bi_neg * w
@@ -741,8 +798,6 @@ def execute_uni_bi_main(reviews_matrix, dictionary, upper_threshold, lower_thres
         all_frequencies_test = merged_all
         neg_frequencies_test = np.reshape(merged_neg, (-1, 1))
         pos_frequencies_test = np.reshape(merged_pos, (-1, 1))
-
-
 
         percent_filter = 0
         n = 6.5
@@ -774,8 +829,21 @@ def execute_uni_bi_main(reviews_matrix, dictionary, upper_threshold, lower_thres
     return report
 
 
-
 def execute_filtered_main(review_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_THRESHOLD, gram):
+    """
+    Execute the main function of the program with filtering.
+
+    Parameters:
+    review_matrix (numpy.array): The review matrix.
+    dictionary (dict): The current dictionary.
+    upper_threshold (float): The upper threshold value.
+    lower_threshold (float): The lower threshold value.
+    PERCENTAGE_THRESHOLD (float): The percentage threshold for filtering.
+    gram (str): 'U' or 'B' for Unigram or Bigram selection.
+
+    Returns:
+    str: The classification report.
+    """
     print("Executing filter function...")
 
     sorted_indices = np.argsort(review_matrix[0])
@@ -841,7 +909,6 @@ def execute_filtered_main(review_matrix, dictionary, upper_threshold, lower_thre
         EER_array.append(EER)
         percent_filter += 0.05
 
-
     # Plot the data
     plt.plot(percent_filter_array, EER_array, label='EER')
     # Add labels and title
@@ -858,7 +925,22 @@ def execute_filtered_main(review_matrix, dictionary, upper_threshold, lower_thre
     return report
 
 
-def execute_filtered_squash_main(review_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_THRESHOLD, gram):
+def execute_filtered_squash_main(review_matrix, dictionary, upper_threshold, lower_threshold, PERCENTAGE_THRESHOLD,
+                                 gram):
+    """
+    Execute the main function of the program with filtering and squashing.
+
+    Parameters:
+    review_matrix (numpy.array): The review matrix.
+    dictionary (dict): The current dictionary.
+    upper_threshold (float): The upper threshold value.
+    lower_threshold (float): The lower threshold value.
+    PERCENTAGE_THRESHOLD (float): The percentage threshold for filtering.
+    gram (str): 'U' or 'B' for Unigram or Bigram selection.
+
+    Returns:
+    str: The classification report.
+    """
     print("Executing filter function...")
 
     sorted_indices = np.argsort(review_matrix[0])
@@ -926,8 +1008,8 @@ def execute_filtered_squash_main(review_matrix, dictionary, upper_threshold, low
             pos_cosine, neg_cosine = cosine_similarity_scores(combined_matrix)
 
             best_threshold = calculate_threshold_bisectional(pos_cosine, neg_cosine, upper_threshold,
-                                                                                               lower_threshold,
-                                                                                               actual_labels)
+                                                             lower_threshold,
+                                                             actual_labels)
 
             predicted_labels, calc_scores, cm, EER, fpr, fnr, Uar = calculate_metrics(actual_labels,
                                                                                       pos_cosine,
