@@ -5,10 +5,47 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8bf554e2-b478-4adf-a546-6db5f494362d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/dictionaries/ngram_dictionary_four.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/dictionaries/ngram_dictionary_one.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/dictionaries/ngram_dictionary_two.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/wordcloud/synthetic_bigrams_normalized_all_list.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/discarded/synthetic_bigrams_normalized.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/SentimentalNN.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/SentimentalNNwPos_Neg.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/bag_of_words.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/best_model_fold_1.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/best_model_fold_2.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/main_two.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/files/rnn_model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pf_EER_bi" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/synthetic_bigrams_normalized.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/synthetic_bigrams_normalized_all_list.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/borilml.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/borilml.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SentimentAnalysis2_28.py" beforeDir="false" afterPath="$PROJECT_DIR$/SentimentAnalysis2_28.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/files/commands.py" beforeDir="false" afterPath="$PROJECT_DIR$/files/commands.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bigram Generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/discarded/Bigram Generator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SentimentAnalysis2_28.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SentimentalNN.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/SentimentalNNwPos_Neg.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/analysis_files/Bigram Generator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/analysis_files/SentimentAnalysis2_28.py" beforeDir="false" afterPath="$PROJECT_DIR$/discarded/SentimentAnalysis2_28.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/dictionaries/bigram_dict(review).csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/dictionaries/bigram_dict(raw).csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/dictionaries/clean_unigram.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/dictionaries/clean_unigrams.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/dictionaries/unigram_dict(review).csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/dictionaries/unigram_dict(raw).csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/dictionaries/unique_bigrams.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/dictionaries/clean_bigrams.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/reviews/empty_removed_clean_review_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/reviews/clean_review_data.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/wordcloud/synthetic_bigrams_normalized.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/wordcloud/synthetic_bigrams_normalized.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/discarded/SentimentAnalysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/discarded/SentimentAnalysis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/files/classifier.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/files/cloud_maker.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/files/commands.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/files/csv_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/files/csv_manipulation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/files/dictionary_maker.py" beforeDir="false" afterPath="$PROJECT_DIR$/files/dictionary_maker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/files/ngram_maker.py" beforeDir="false" afterPath="$PROJECT_DIR$/discarded/UnusedCode.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/files/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,14 +80,41 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ASKED_ADD_EXTERNAL_FILES": "true",
+    "Python.SentimentAnalysis.executor": "Run",
+    "Python.SentimentAnalysis2_28.executor": "Run",
+    "Python.__init__.executor": "Run",
+    "Python.bag_of_words.executor": "Run",
+    "Python.csv_manipulation.executor": "Run",
+    "Python.dictionary_maker.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.main_new.executor": "Run",
+    "Python.main_two.executor": "Run",
+    "Python.rnn_model.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "Grant",
-    "last_opened_file_path": "C:/Users/gdstren/Documents/GitHub/borilml",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/olson/Documents/sentiment_analysis_repo/borilml",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  },
+  "keyToStringList": {
+    "stardust.markdown.MarkdownSplitEditorSuppressor:keyList": []
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\olson\Documents\sentiment_analysis_repo\borilml\discarded" />
+      <recent name="C:\Users\olson\Documents\sentiment_analysis_repo\borilml\files" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-975db3bf15a3-31b6be0877a2-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-241.18034.82" />
+      </set>
+    </attachedChunks>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">

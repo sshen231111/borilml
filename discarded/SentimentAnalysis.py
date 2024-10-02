@@ -469,9 +469,9 @@ def squash(mask, n):
 
 
 def load_data(gram):
-    reviews_matrix = pd.read_csv("clean_review_data.csv").to_numpy().T
+    reviews_matrix = pd.read_csv("data/reviews/clean_review_data.csv").to_numpy().T
     if gram == "U":
-        review_dict = load_csv_row("clean_unigram.csv", 0, first_row_header=False)
+        review_dict = load_csv_row("clean_unigrams.csv", 0, first_row_header=False)
     elif gram == "B":
         review_dict = load_csv_row("clean_bigrams.csv", 0, first_row_header=False)
     else:
