@@ -140,5 +140,6 @@ def create_dictionary(gram_size):
     # Generate a dictionary of n-grams from the reviews
     generate_dictionary(int(gram_size), reviews)
 
+
 # Uncomment the following line to run the function when the script is executed
-# create_dictionary()
+# create_dictionary(5)
